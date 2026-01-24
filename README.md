@@ -13,64 +13,51 @@
 3. Put SD card in raspberry
 4. copy bootstrap script
     ```shell
-     scp scripts/bootstrap.sh raspberrypi.local 
+     scp scripts/bootstrap.sh lev@raspberrypi.local 
     ```
-5. connect via ssh to it
+5. connect via ssh to it and run the script
    ```shell
-       ssh raspberrypi.local 
+       ssh lev@raspberrypi.local 'sudo bash bootstrap.sh'
    ```
-6. Run Script
+6. restart system
     ```shell
-     sudo bootstrap.sh
-   ```
-7. Дополнительные настройки для устранения ошибок в НА
+     ssh lev@raspberrypi.local  'sudo reboot'
+    ```
+7. copy init script
    ```shell
-    nano /boot/firmware/cmdline.txt
-   ```
-   В конец первой строки файла вставляем
-   `systemd.unified_cgroup_hierarchy=false lsm=apparmor`
-
-   `Ctrl X` - для выхода    
-   `Y` для сохранения
-8. restart system
+   scp scripts/init.sh lev@raspberrypi.local
+    ```
+8. connect via ssh to it and run script
     ```shell
-      reboot
+        ssh lev@raspberrypi.local 'sudo bash init.sh'
+        ssh lev@raspberrypi.local 'sudo gpasswd -a $USER docker'
+        ssh lev@raspberrypi.local 'sudo newgrp docker'
     ```
-9. copy init script
-   ```shell
-   scp scripts/init.sh raspberrypi.local
-    ```
+9. copy installment HA script
+     ```shell
+      scp scripts/install-ha.sh lev@raspberrypi.local:
+     ```
 10. connect via ssh to it
     ```shell
-        ssh raspberrypi.local 
+        ssh lev@raspberrypi.local 'sudo bash install-ha.sh'
     ```
-11. Run Script
-     ```shell
-      sudo init.sh
-     ```
-12. Add user to docker group
+    Script will fail if you use Debian Version > 12. at this moment there is no supporting of 13th version. So install ha via docker:
     ```shell
-     sudo gpasswd -a $USER docker
-     newgrp docker
+
+    ssh lev@raspberrypi.local 'docker run -d \
+    --name homeassistant \
+    --restart=unless-stopped \
+     -v /home/homeassistant/.homeassistant:/config \
+    --network=host \
+     ghcr.io/home-assistant/home-assistant:stable'
+
     ```
-13. copy installment HA script
-     ```shell
-      scp scripts/install-ha.sh raspberrypi.local:
-     ```
-14. connect via ssh to it
-    ```shell
-        ssh raspberrypi.local 
-    ```
-15. Run Script
-     ```shell
-      sudo install-ha.sh
-    ```
-16. Choose raspberryPi4-64
-17. If everything was ok then you will see: 
+11. Choose raspberryPi4-64
+12. If everything was ok then you will see: 
     ```
     [info] Within a few minutes you will be able to reach Home Assistant at:
     [info] http://homeassistant.local:8123 or using the IP address of your
     [info] machine: http://192.168.31.229:8123
     ```
-18. After few minutes you can see
+13. After few minutes you can see
 ![img.png](imgs/img.png)
