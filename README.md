@@ -13,25 +13,25 @@
 3. Put SD card in raspberry
 4. copy bootstrap script
     ```shell
-     scp scripts/bootstrap.sh lev@raspberrypi.local 
+     scp scripts/bootstrap.sh lev@raspberrypi.local:~/bootstrap.sh
     ```
 5. connect via ssh to it and run the script
    ```shell
-       ssh lev@raspberrypi.local 'sudo bash bootstrap.sh'
+       ssh lev@raspberrypi.local -t 'sudo bash bootstrap.sh'
    ```
 6. restart system
     ```shell
-     ssh lev@raspberrypi.local  'sudo reboot'
+     ssh lev@raspberrypi.local -t  'sudo reboot'
     ```
 7. copy init script
    ```shell
-   scp scripts/init.sh lev@raspberrypi.local
+   scp scripts/init.sh lev@raspberrypi.local:~/init.sh
     ```
 8. connect via ssh to it and run script
     ```shell
-        ssh lev@raspberrypi.local 'sudo bash init.sh'
-        ssh lev@raspberrypi.local 'sudo gpasswd -a $USER docker'
-        ssh lev@raspberrypi.local 'sudo newgrp docker'
+        ssh lev@raspberrypi.local -t 'sudo bash init.sh'
+        ssh lev@raspberrypi.local -t 'sudo gpasswd -a $USER docker'
+        ssh lev@raspberrypi.local  -t 'sudo newgrp docker'
     ```
 9. copy installment HA script
      ```shell
@@ -61,3 +61,9 @@
     ```
 13. After few minutes you can see
 ![img.png](imgs/img.png)
+
+14. install tailscale
+```shell
+scp scripts/install-tailscale.sh lev@raspberrypi.local:
+ssh lev@raspberrypi.local -t 'sudo bash install-tailscale.sh'
+```
