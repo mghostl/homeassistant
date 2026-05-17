@@ -26,8 +26,22 @@ export BW_SESSION="$(bw unlock --raw)"
 scripts/store-ha-secrets-bitwarden.sh
 ```
 
-After copying config changes to the Pi, restart Home Assistant:
+Deploy repository config to the Raspberry Pi with:
 
 ```sh
-docker restart homeassistant
+scripts/deploy-ha-config.sh
+```
+
+The deploy script stages the repo config on the Pi, validates it with Home Assistant's config checker, backs up the current managed YAML/config files, applies the changes, and restarts the `homeassistant` container.
+
+To validate without applying changes:
+
+```sh
+HA_VALIDATE_ONLY=1 scripts/deploy-ha-config.sh
+```
+
+Clear only the Home Assistant brand icon cache on the Raspberry Pi with:
+
+```sh
+ssh lev@raspberrypi.local 'bash -s' < scripts/clear-ha-cache.sh
 ```

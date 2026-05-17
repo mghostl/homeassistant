@@ -6,6 +6,13 @@ default_config:
 frontend:
   themes: !include_dir_merge_named themes
 
+# Store history while reducing write pressure on the Raspberry Pi SD card.
+recorder:
+  purge_keep_days: 10
+  auto_purge: true
+  auto_repack: true
+  commit_interval: 30
+
 automation: !include automations.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
