@@ -2,14 +2,11 @@
   alias: Daily vacuum cleaning routine
   description: ''
   triggers:
-  - trigger: time_pattern
-    hours: '12'
+  - trigger: time
+    at: '12:00:00'
   conditions: []
   actions:
-  - device_id: e52a4e38f8d6fb19ddd4b95fba2f5a59
-    domain: vacuum
-    entity_id: d7c379f3658c7dc829a6139fa2b831e3
-    type: clean
-    metadata:
-      secondary: false
+  - action: vacuum.start
+    target:
+      entity_id: vacuum.roborock_qrevo_master
   mode: single

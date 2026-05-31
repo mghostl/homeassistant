@@ -17,6 +17,13 @@ Tracked files include:
 - `blueprints/**/*.yaml`
 - `themes/`
 
+## Stable Entity IDs
+
+Automations should target named Home Assistant entities instead of generated device
+registry IDs. Before deploying this config, rename the daily vacuum entity in Home
+Assistant to `vacuum.roborock_qrevo_master` and keep that entity ID when re-pairing or
+rebuilding the instance.
+
 The real `secrets.yaml` is intentionally ignored because it may contain credentials. Keep only secret names in `secrets.yaml.example`, and maintain the real values directly on the Raspberry Pi or in a private secret manager.
 
 Secrets should be stored in Bitwarden folder `home assistant` as secure note `Home Assistant secrets.yaml`:
