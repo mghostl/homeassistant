@@ -24,6 +24,18 @@ registry IDs. Before deploying this config, rename the daily vacuum entity in Ho
 Assistant to `vacuum.roborock_qrevo_master` and keep that entity ID when re-pairing or
 rebuilding the instance.
 
+## Daily Vacuum Guard Rails
+
+The daily vacuum automation runs at 12:00 only when:
+
+- `input_boolean.daily_vacuum_enabled` is on
+- The day is Monday through Friday
+- `vacuum.roborock_qrevo_master` is `docked` or `idle`
+- The vacuum `battery_level` attribute is at least 30%
+
+The `zone.home` occupancy guard is present in `automations.yaml` but commented out
+for now. The enable helper starts on by default after Home Assistant restarts.
+
 The real `secrets.yaml` is intentionally ignored because it may contain credentials. Keep only secret names in `secrets.yaml.example`, and maintain the real values directly on the Raspberry Pi or in a private secret manager.
 
 Secrets should be stored in Bitwarden folder `home assistant` as secure note `Home Assistant secrets.yaml`:

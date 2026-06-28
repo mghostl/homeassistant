@@ -13,6 +13,12 @@ recorder:
   auto_repack: true
   commit_interval: 30
 
+input_boolean:
+  daily_vacuum_enabled:
+    name: Daily vacuum enabled
+    icon: mdi:robot-vacuum
+    initial: true
+
 automation: !include automations.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml

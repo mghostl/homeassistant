@@ -52,14 +52,14 @@ echo "Deploying Home Assistant config from $SOURCE_DIR to $HA_SSH_HOST:$HA_CONFI
 echo "Managed paths:"
 printf '  %s\n' "${MANAGED_PATHS[@]}"
 
-REMOTE_STAGE="$(ssh "$HA_SSH_HOST" 'mktemp -d /tmp/ha-config-deploy.XXXXXX')"
+REMOTE_STAGE="$(ssh -t "$HA_SSH_HOST" 'mktemp -d /tmp/ha-config-deploy.XXXXXX')"
 
 cleanup() {
-    ssh "$HA_SSH_HOST" "sudo rm -rf '$REMOTE_STAGE'" >/dev/null 2>&1 || true
+    ssh -t "$HA_SSH_HOST" "sudo rm -rf '$REMOTE_STAGE'" >/dev/null 2>&1 || true
 }
 trap cleanup EXIT
 
-ssh "$HA_SSH_HOST" "mkdir -p '$REMOTE_STAGE/source'"
+ssh -t "$HA_SSH_HOST" "mkdir -p '$REMOTE_STAGE/source'"
 
 tar -C "$SOURCE_DIR" \
     --exclude='.gitkeep' \
@@ -69,9 +69,9 @@ tar -C "$SOURCE_DIR" \
     --exclude='secrets.yml.example' \
     --exclude='README.md' \
     -czf - "${MANAGED_PATHS[@]}" |
-    ssh "$HA_SSH_HOST" "tar -xzf - -C '$REMOTE_STAGE/source'"
+    ssh -t "$HA_SSH_HOST" "tar -xzf - -C '$REMOTE_STAGE/source'"
 
-ssh "$HA_SSH_HOST" bash -s -- \
+ssh -t "$HA_SSH_HOST" bash -s -- \
     "$REMOTE_STAGE" \
     "$HA_CONFIG_DIR" \
     "$HA_CONTAINER_NAME" \

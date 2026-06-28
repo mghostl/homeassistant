@@ -4,7 +4,32 @@
   triggers:
   - trigger: time
     at: '12:00:00'
-  conditions: []
+  conditions:
+  - alias: Daily vacuuming is enabled
+    condition: state
+    entity_id: input_boolean.daily_vacuum_enabled
+    state: 'on'
+  - alias: Run only on weekdays
+    condition: time
+    weekday:
+    - mon
+    - tue
+    - wed
+    - thu
+    - fri
+  # - alias: Nobody is home
+  #   condition: numeric_state
+  #   entity_id: zone.home
+  #   below: 1
+  - alias: Vacuum is docked or idle
+    condition: state
+    entity_id: vacuum.roborock_qrevo_master
+    state:
+    - docked
+    - idle
+  - alias: Vacuum battery is at least 30%
+    condition: template
+    value_template: "{{ state_attr('vacuum.roborock_qrevo_master', 'battery_level') | int(0) >= 30 }}"
   actions:
   - action: vacuum.start
     target:
