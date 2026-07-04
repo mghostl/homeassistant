@@ -15,6 +15,7 @@ Tracked files include:
 - `scripts.yaml`
 - `scenes.yaml`
 - `blueprints/**/*.yaml`
+- `dashboards/**/*.yaml`
 - `themes/`
 
 ## Stable Entity IDs
@@ -35,6 +36,9 @@ The daily vacuum automation runs at 12:00 only when:
 
 The `zone.home` occupancy guard is present in `automations.yaml` but commented out
 for now. The enable helper starts on by default after Home Assistant restarts.
+
+The `Vacuum` dashboard is defined in `dashboards/vacuum.yaml` and exposes a
+toggle button for `input_boolean.daily_vacuum_enabled`.
 
 The real `secrets.yaml` is intentionally ignored because it may contain credentials. Keep only secret names in `secrets.yaml.example`, and maintain the real values directly on the Raspberry Pi or in a private secret manager.
 

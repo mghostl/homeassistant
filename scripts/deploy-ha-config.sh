@@ -37,7 +37,7 @@ while IFS= read -r -d '' file; do
 done < <(find "$SOURCE_DIR" -maxdepth 1 -type f \( -name '*.yaml' -o -name '*.yml' \) -print0)
 
 MANAGED_PATHS=("${TOP_LEVEL_FILES[@]}")
-for dir_name in blueprints themes packages; do
+for dir_name in blueprints themes packages dashboards; do
     if [ -d "$SOURCE_DIR/$dir_name" ]; then
         MANAGED_PATHS+=("$dir_name")
     fi
@@ -146,7 +146,7 @@ BACKUP_PATH="$BACKUP_DIR/homeassistant-config-before-deploy-$TIMESTAMP.tar.gz"
 sudo mkdir -p "$BACKUP_DIR"
 
 EXISTING_PATHS=()
-for path in configuration.yaml automations.yaml scripts.yaml scenes.yaml blueprints themes packages; do
+for path in configuration.yaml automations.yaml scripts.yaml scenes.yaml blueprints themes packages dashboards; do
     if [ -e "$CONFIG_DIR/$path" ]; then
         EXISTING_PATHS+=("$path")
     fi
@@ -163,7 +163,7 @@ while IFS= read -r -d '' file; do
     sudo install -m 0644 "$file" "$target"
 done < <(find "$SOURCE_DIR" -maxdepth 1 -type f \( -name '*.yaml' -o -name '*.yml' \) -print0)
 
-for dir_name in blueprints themes packages; do
+for dir_name in blueprints themes packages dashboards; do
     if [ -d "$SOURCE_DIR/$dir_name" ]; then
         sudo rm -rf "$CONFIG_DIR/$dir_name"
         sudo cp -a "$SOURCE_DIR/$dir_name" "$CONFIG_DIR/$dir_name"

@@ -1,0 +1,13 @@
+title: Vacuum
+views:
+  - title: Controls
+    path: controls
+    icon: mdi:robot-vacuum
+    cards:
+      - type: button
+        entity: input_boolean.daily_vacuum_enabled
+        name: Daily vacuum schedule
+        icon: mdi:calendar-clock
+        show_state: true
+        tap_action:
+          action: toggle

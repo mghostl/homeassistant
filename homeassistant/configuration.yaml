@@ -19,6 +19,15 @@ input_boolean:
     icon: mdi:robot-vacuum
     initial: true
 
+lovelace:
+  dashboards:
+    dashboard-vacuum:
+      mode: yaml
+      filename: dashboards/vacuum.yaml
+      title: Vacuum
+      icon: mdi:robot-vacuum
+      show_in_sidebar: true
+
 automation: !include automations.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
