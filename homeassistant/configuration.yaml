@@ -17,7 +17,6 @@ input_boolean:
   daily_vacuum_enabled:
     name: Daily vacuum enabled
     icon: mdi:robot-vacuum
-    initial: true
 
 lovelace:
   dashboards:
