@@ -12,12 +12,9 @@ views:
           - entity: vacuum.roborock_qrevo_master
             name: Status
             secondary_info: last-changed
-          - type: attribute
-            entity: vacuum.roborock_qrevo_master
-            attribute: battery_level
+          - entity: sensor.roborock_qrevo_master_battery
             name: Battery
             icon: mdi:battery
-            suffix: "%"
           - type: attribute
             entity: automation.daily_vacuum_cleaning_routine
             attribute: last_triggered

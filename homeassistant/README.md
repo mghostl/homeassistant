@@ -32,7 +32,7 @@ The daily vacuum automation runs at 12:00 only when:
 - `input_boolean.daily_vacuum_enabled` is on
 - The day is Monday through Friday
 - `vacuum.roborock_qrevo_master` is `docked` or `idle`
-- The vacuum `battery_level` attribute is at least 30%
+- `sensor.roborock_qrevo_master_battery` is at least 30%
 
 The `zone.home` occupancy guard is present in `automations.yaml` but commented out
 for now. The enable helper starts on by default after Home Assistant restarts.

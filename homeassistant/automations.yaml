@@ -28,8 +28,9 @@
     - docked
     - idle
   - alias: Vacuum battery is at least 30%
-    condition: template
-    value_template: "{{ state_attr('vacuum.roborock_qrevo_master', 'battery_level') | int(0) >= 30 }}"
+    condition: numeric_state
+    entity_id: sensor.roborock_qrevo_master_battery
+    above: 29
   actions:
   - action: vacuum.start
     target:

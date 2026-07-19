@@ -12,6 +12,23 @@ recorder:
   auto_purge: true
   auto_repack: true
   commit_interval: 30
+  include:
+    entities:
+      - sensor.roborock_qrevo_master_battery
+  exclude:
+    domains:
+      - device_tracker
+      - update
+    entity_globs:
+      - binary_sensor.roborock_qrevo_master_*
+      - button.roborock_qrevo_master_*
+      - image.roborock_qrevo_master_*
+      - number.roborock_qrevo_master_*
+      - select.roborock_qrevo_master_*
+      - sensor.roborock_qrevo_master_*
+      - switch.roborock_qrevo_master_*
+    entities:
+      - sun.sun
 
 input_boolean:
   daily_vacuum_enabled:
