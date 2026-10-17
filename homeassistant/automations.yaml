@@ -1,26 +1,28 @@
 - id: '1765211431652'
   alias: Daily vacuum cleaning routine
-  description: ''
+  description: Retry every 30 minutes on weekdays until the vacuum starts, with one run per day.
   triggers:
-  - trigger: time
-    at: '12:00:00'
+  - trigger: time_pattern
+    minutes: '/30'
   conditions:
   - alias: Daily vacuuming is enabled
     condition: state
     entity_id: input_boolean.daily_vacuum_enabled
     state: 'on'
-  - alias: Run only on weekdays
+  - alias: Run only on weekdays between noon and 21:00
     condition: time
+    after: '11:59:00'
+    before: '21:01:00'
     weekday:
     - mon
     - tue
     - wed
     - thu
     - fri
-  # - alias: Nobody is home
-  #   condition: numeric_state
-  #   entity_id: zone.home
-  #   below: 1
+  - alias: Run at most once per day
+    condition: template
+    value_template: >-
+      {{ states('input_datetime.daily_vacuum_last_run') != now().date().isoformat() }}
   - alias: Vacuum is docked or idle
     condition: state
     entity_id: vacuum.roborock_qrevo_master
@@ -35,4 +37,47 @@
   - action: vacuum.start
     target:
       entity_id: vacuum.roborock_qrevo_master
+  - alias: Confirm the vacuum started before marking today's run complete
+    wait_template: >-
+      {{ is_state('vacuum.roborock_qrevo_master', 'cleaning') }}
+    timeout: '00:02:00'
+    continue_on_timeout: false
+  - action: input_datetime.set_datetime
+    target:
+      entity_id: input_datetime.daily_vacuum_last_run
+    data:
+      date: '{{ now().date().isoformat() }}'
+  - action: persistent_notification.dismiss
+    data:
+      notification_id: daily_vacuum_not_run
+  mode: single
+
+- id: '1765211431653'
+  alias: Notify when daily vacuum did not run
+  description: Create a notification when an enabled weekday run never started by 21:00.
+  triggers:
+  - trigger: time
+    at: '21:05:00'
+  conditions:
+  - condition: state
+    entity_id: input_boolean.daily_vacuum_enabled
+    state: 'on'
+  - condition: time
+    weekday:
+    - mon
+    - tue
+    - wed
+    - thu
+    - fri
+  - condition: template
+    value_template: >-
+      {{ states('input_datetime.daily_vacuum_last_run') != now().date().isoformat() }}
+  actions:
+  - action: persistent_notification.create
+    data:
+      notification_id: daily_vacuum_not_run
+      title: Daily vacuum did not run
+      message: >-
+        The weekday vacuum did not start by 21:00. Check that it is online,
+        docked or idle, and above 30% battery.
   mode: single

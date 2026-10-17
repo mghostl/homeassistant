@@ -35,6 +35,13 @@ input_boolean:
     name: Daily vacuum enabled
     icon: mdi:robot-vacuum
 
+input_datetime:
+  daily_vacuum_last_run:
+    name: Daily vacuum last run
+    has_date: true
+    has_time: false
+    icon: mdi:calendar-check
+
 lovelace:
   dashboards:
     dashboard-vacuum:
