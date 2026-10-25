@@ -47,9 +47,75 @@
       entity_id: input_datetime.daily_vacuum_last_run
     data:
       date: '{{ now().date().isoformat() }}'
+  - action: input_datetime.set_datetime
+    target:
+      entity_id: input_datetime.daily_vacuum_started_at
+    data:
+      datetime: '{{ now().strftime("%Y-%m-%d %H:%M:%S") }}'
   - action: persistent_notification.dismiss
     data:
       notification_id: daily_vacuum_not_run
+  mode: single
+
+- id: '1769211431654'
+  alias: Monitor daily vacuum outcome
+  description: Record a completed scheduled run and report a failed or stalled one.
+  triggers:
+  - id: completed
+    trigger: state
+    entity_id: vacuum.roborock_qrevo_master
+    to:
+    - docked
+    - idle
+  - id: failed
+    trigger: state
+    entity_id: vacuum.roborock_qrevo_master
+    to:
+    - error
+    - unavailable
+    for: '00:05:00'
+  - id: stalled
+    trigger: time_pattern
+    minutes: '/15'
+  conditions:
+  - alias: A scheduled daily run started today
+    condition: template
+    value_template: >-
+      {{ states('input_datetime.daily_vacuum_last_run') == now().date().isoformat() }}
+  - alias: Today's run has not already completed
+    condition: template
+    value_template: >-
+      {{ states('input_datetime.daily_vacuum_last_completed') != now().date().isoformat() }}
+  - alias: A stalled-run check only applies after four hours of cleaning
+    condition: template
+    value_template: >-
+      {{ trigger.id != 'stalled' or
+         (is_state('vacuum.roborock_qrevo_master', 'cleaning') and
+          states('input_datetime.daily_vacuum_started_at') not in ['unknown', 'unavailable'] and
+          as_timestamp(now()) - as_timestamp(states('input_datetime.daily_vacuum_started_at')) >= 4 * 60 * 60) }}
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: completed
+      sequence:
+      - action: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.daily_vacuum_last_completed
+        data:
+          date: '{{ now().date().isoformat() }}'
+      - action: persistent_notification.dismiss
+        data:
+          notification_id: daily_vacuum_run_problem
+    default:
+    - action: persistent_notification.create
+      data:
+        notification_id: daily_vacuum_run_problem
+        title: Daily vacuum needs attention
+        message: >-
+          The daily vacuum started today but {{ 'has been cleaning for more than four hours'
+          if trigger.id == 'stalled' else 'reported ' ~ trigger.to_state.state }}.
+          Check the vacuum and its dock.
   mode: single
 
 - id: '1765211431653'

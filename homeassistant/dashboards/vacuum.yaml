@@ -16,6 +16,9 @@ views:
             name: Battery
             icon: mdi:battery
           - entity: input_datetime.daily_vacuum_last_run
+            name: Last scheduled start
+            icon: mdi:play-circle-outline
+          - entity: input_datetime.daily_vacuum_last_completed
             name: Last completed run
             icon: mdi:calendar-check
       - type: horizontal-stack

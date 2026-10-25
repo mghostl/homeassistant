@@ -37,10 +37,20 @@ input_boolean:
 
 input_datetime:
   daily_vacuum_last_run:
-    name: Daily vacuum last run
+    name: Daily vacuum last started
     has_date: true
     has_time: false
     icon: mdi:calendar-check
+  daily_vacuum_last_completed:
+    name: Daily vacuum last completed
+    has_date: true
+    has_time: false
+    icon: mdi:calendar-check
+  daily_vacuum_started_at:
+    name: Daily vacuum started at
+    has_date: true
+    has_time: true
+    icon: mdi:clock-start
 
 lovelace:
   dashboards:

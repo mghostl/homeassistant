@@ -36,14 +36,18 @@ weekdays and starts at most once per day when:
 - `sensor.roborock_qrevo_master_battery` is at least 30%
 
 The automation waits for the vacuum to report `cleaning` before recording the
-run. If it has not started by 21:00, Home Assistant creates a persistent
-notification. Occupancy does not block cleaning. The enable helper restores its
-previous state after restart unless an `initial` value is configured.
+start date. Once that scheduled run returns to `docked` or `idle`, Home
+Assistant records its completion date. A persistent notification is created if
+the run never starts by 21:00, reports `error` or `unavailable` for five
+minutes, or remains `cleaning` for over four hours. The four-hour check runs
+every 15 minutes, so it remains effective after a Home Assistant restart.
+Occupancy does not block cleaning. The enable helper restores its previous
+state after restart unless an `initial` value is configured.
 
 The `Vacuum` dashboard is defined in `dashboards/vacuum.yaml` and exposes
-vacuum status, battery level, the last daily routine run, manual controls for
-start, pause, and return to base, and the `input_boolean.daily_vacuum_enabled`
-schedule toggle.
+vacuum status, battery level, the last scheduled start and confirmed completion,
+manual controls for start, pause, and return to base, and the
+`input_boolean.daily_vacuum_enabled` schedule toggle.
 
 The real `secrets.yaml` is intentionally ignored because it may contain credentials. Keep only secret names in `secrets.yaml.example`, and maintain the real values directly on the Raspberry Pi or in a private secret manager.
 
