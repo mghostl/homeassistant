@@ -33,7 +33,7 @@
         ssh lev@raspberrypi.local -t 'sudo gpasswd -a $USER docker'
         ssh lev@raspberrypi.local  -t 'sudo newgrp docker'
     ```
-9. copy installment HA script
+9. Copy the Home Assistant Container installation script
      ```shell
       scp scripts/install-ha.sh lev@raspberrypi.local:
      ```
@@ -41,28 +41,18 @@
     ```shell
         ssh lev@raspberrypi.local 'sudo bash install-ha.sh'
     ```
-    Script will fail if you use Debian Version > 12. at this moment there is no supporting of 13th version. So install ha via docker:
-    ```shell
-
-    ssh lev@raspberrypi.local 'docker run -d \
-    --name homeassistant \
-    --restart=unless-stopped \
-     -v /home/homeassistant/.homeassistant:/config \
-    --network=host \
-     ghcr.io/home-assistant/home-assistant:stable'
-
-    ```
-11. Choose raspberryPi4-64
-12. If everything was ok then you will see: 
+    This repository uses Home Assistant Container. It does not install Home Assistant
+    OS, Supervisor, or add-ons; manage the installation through the Docker container.
+11. If everything was ok then you will see:
     ```
     [info] Within a few minutes you will be able to reach Home Assistant at:
     [info] http://homeassistant.local:8123 or using the IP address of your
     [info] machine: http://192.168.31.229:8123
     ```
-13. After few minutes you can see
+12. After a few minutes you can see
 ![img.png](imgs/img.png)
 
-14. install tailscale
+13. Install Tailscale
 ```shell
 scp scripts/install-tailscale.sh lev@raspberrypi.local:
 ssh lev@raspberrypi.local -t 'sudo bash install-tailscale.sh'

@@ -77,6 +77,13 @@ reached. Override the LAN host, Tailscale host, or timeout with `HA_SSH_HOST`,
 
 The deploy script stages the repo config on the Pi, validates it with Home Assistant's config checker, backs up the current managed YAML/config files, applies the changes, and restarts the `homeassistant` container.
 
+After a deployment restart, it waits up to 120 seconds for the local Home Assistant
+web endpoint to respond. If it does not, the script restores the managed YAML/config
+backup and restarts the container again. Override the timeout, interval, or endpoint
+with `HA_HEALTHCHECK_TIMEOUT`, `HA_HEALTHCHECK_INTERVAL`, and `HA_HEALTHCHECK_URL`.
+This rollback protects repository-managed configuration only; it is not a replacement
+for a full, off-device backup of `/home/homeassistant/.homeassistant`.
+
 To validate without applying changes:
 
 ```sh

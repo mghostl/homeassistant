@@ -13,6 +13,9 @@ HA_TIME_ZONE="${HA_TIME_ZONE:-Europe/Amsterdam}"
 HA_BACKUP_DIR="${HA_BACKUP_DIR:-/tmp}"
 HA_RESTART="${HA_RESTART:-1}"
 HA_VALIDATE_ONLY="${HA_VALIDATE_ONLY:-0}"
+HA_HEALTHCHECK_TIMEOUT="${HA_HEALTHCHECK_TIMEOUT:-120}"
+HA_HEALTHCHECK_INTERVAL="${HA_HEALTHCHECK_INTERVAL:-5}"
+HA_HEALTHCHECK_URL="${HA_HEALTHCHECK_URL:-http://127.0.0.1:8123/}"
 
 if [ ! -d "$SOURCE_DIR" ]; then
     echo "Source directory not found: $SOURCE_DIR"
@@ -133,6 +136,9 @@ TIME_ZONE="$5"
 BACKUP_DIR="$6"
 RESTART="$7"
 VALIDATE_ONLY="$8"
+HEALTHCHECK_TIMEOUT="$9"
+HEALTHCHECK_INTERVAL="${10}"
+HEALTHCHECK_URL="${11}"
 
 trap 'rm -rf -- "$REMOTE_STAGE"' EXIT
 
@@ -181,6 +187,36 @@ if [ "$VALIDATE_ONLY" = "1" ]; then
     exit 0
 fi
 
+if ! [[ "$HEALTHCHECK_TIMEOUT" =~ ^[1-9][0-9]*$ ]] || ! [[ "$HEALTHCHECK_INTERVAL" =~ ^[1-9][0-9]*$ ]]; then
+    echo "HA health-check timeout and interval must be positive integers."
+    exit 1
+fi
+
+check_home_assistant() {
+    if ! docker inspect --format '{{.State.Running}}' "$CONTAINER_NAME" 2>/dev/null | grep -qx true; then
+        return 1
+    fi
+
+    if command -v curl >/dev/null 2>&1; then
+        curl -fsS -o /dev/null --max-time 10 "$HEALTHCHECK_URL"
+    else
+        docker exec "$CONTAINER_NAME" python -c \
+            'import sys, urllib.request; urllib.request.urlopen(sys.argv[1], timeout=10)' \
+            "$HEALTHCHECK_URL" >/dev/null
+    fi
+}
+
+wait_for_home_assistant() {
+    local deadline=$((SECONDS + HEALTHCHECK_TIMEOUT))
+    while [ "$SECONDS" -lt "$deadline" ]; do
+        if check_home_assistant; then
+            return 0
+        fi
+        sleep "$HEALTHCHECK_INTERVAL"
+    done
+    return 1
+}
+
 TIMESTAMP="$(date +%Y%m%d-%H%M%S)"
 BACKUP_PATH="$BACKUP_DIR/homeassistant-config-before-deploy-$TIMESTAMP.tar.gz"
 mkdir -p "$BACKUP_DIR"
@@ -215,7 +251,28 @@ rm -f "$CONFIG_DIR/secrets.yaml.example" "$CONFIG_DIR/secrets.yml.example" "$CON
 if [ "$RESTART" = "1" ]; then
     echo "Restarting Home Assistant container: $CONTAINER_NAME"
     docker restart "$CONTAINER_NAME" >/dev/null
-    echo "Home Assistant restarted."
+    echo "Waiting up to ${HEALTHCHECK_TIMEOUT}s for Home Assistant health check: $HEALTHCHECK_URL"
+    if wait_for_home_assistant; then
+        echo "Home Assistant restarted and is healthy."
+    else
+        echo "Home Assistant did not become healthy after deployment." >&2
+        if [ -f "$BACKUP_PATH" ]; then
+            echo "Rolling back managed configuration from $BACKUP_PATH" >&2
+            rm -rf "$CONFIG_DIR/configuration.yaml" "$CONFIG_DIR/automations.yaml" \
+                "$CONFIG_DIR/scripts.yaml" "$CONFIG_DIR/scenes.yaml" "$CONFIG_DIR/blueprints" \
+                "$CONFIG_DIR/themes" "$CONFIG_DIR/packages" "$CONFIG_DIR/dashboards"
+            tar -C "$CONFIG_DIR" -xzf "$BACKUP_PATH"
+            docker restart "$CONTAINER_NAME" >/dev/null
+            if wait_for_home_assistant; then
+                echo "Rollback completed; Home Assistant is healthy again." >&2
+            else
+                echo "Rollback was applied, but Home Assistant is still unhealthy. Check: docker logs $CONTAINER_NAME" >&2
+            fi
+        else
+            echo "No managed-config backup was available for rollback. Check: docker logs $CONTAINER_NAME" >&2
+        fi
+        exit 1
+    fi
 else
     echo "HA_RESTART=0, so Home Assistant was not restarted."
 fi
@@ -231,7 +288,10 @@ printf -v REMOTE_COMMAND '%q ' "${REMOTE_SUDO[@]}" bash \
     "$HA_TIME_ZONE" \
     "$HA_BACKUP_DIR" \
     "$HA_RESTART" \
-    "$HA_VALIDATE_ONLY"
+    "$HA_VALIDATE_ONLY" \
+    "$HA_HEALTHCHECK_TIMEOUT" \
+    "$HA_HEALTHCHECK_INTERVAL" \
+    "$HA_HEALTHCHECK_URL"
 ssh "${SSH_OPTIONS[@]}" "${SSH_TTY[@]}" "$ACTIVE_HA_SSH_HOST" "$REMOTE_COMMAND"
 
 echo "Deployment completed."
