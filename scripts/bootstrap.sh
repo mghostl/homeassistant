@@ -1,13 +1,19 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
+
+RPI_UPDATE="${RPI_UPDATE:-0}"
 
 echo "Обновление списка пакетов и пакетов"
 apt update
 apt upgrade -y
 
-echo "Обновление прошивки - только при необходимости!"
-rpi-update
+if [ "$RPI_UPDATE" = "1" ]; then
+    echo "Обновление прошивки по явному запросу (RPI_UPDATE=1)"
+    rpi-update
+else
+    echo "Пропуск rpi-update. Для обновления прошивки запустите с RPI_UPDATE=1."
+fi
 
 echo "Установка необходимых пакетов"
 apt-get install -y jq wget curl udisks2 apparmor-utils libglib2.0-bin network-manager dbus systemd-journal-remote systemd-resolved vim

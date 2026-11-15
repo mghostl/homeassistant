@@ -84,6 +84,20 @@ with `HA_HEALTHCHECK_TIMEOUT`, `HA_HEALTHCHECK_INTERVAL`, and `HA_HEALTHCHECK_UR
 This rollback protects repository-managed configuration only; it is not a replacement
 for a full, off-device backup of `/home/homeassistant/.homeassistant`.
 
+## Backups and maintenance
+
+Configure encrypted automatic backups in Home Assistant under **Settings > System >
+Backups**. Store a copy outside the Raspberry Pi (for example on network storage or
+Home Assistant Cloud), retain the downloaded emergency kit separately, and verify a
+restore before relying on it. The Container installation stores local backups in
+`/home/homeassistant/.homeassistant/backups`, so backups kept only there will not
+survive a failed SD card or Pi.
+
+Keep Raspberry Pi OS, Docker, and Home Assistant current. Before an update, confirm
+that a recent off-device backup completed successfully. To avoid unplanned firmware
+changes, `scripts/bootstrap.sh` skips `rpi-update` by default; run it only for a
+specific troubleshooting reason with `RPI_UPDATE=1 sudo bash bootstrap.sh`.
+
 To validate without applying changes:
 
 ```sh

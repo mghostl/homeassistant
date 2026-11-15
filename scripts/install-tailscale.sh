@@ -29,7 +29,8 @@ INSTALLER="$(mktemp)"
 trap 'rm -f "$INSTALLER"' EXIT
 
 echo "Downloading Tailscale installer"
-curl -fsSL "$TAILSCALE_INSTALL_URL" -o "$INSTALLER"
+curl --fail --show-error --silent --location --proto '=https' --tlsv1.2 \
+    "$TAILSCALE_INSTALL_URL" -o "$INSTALLER"
 
 echo "Installing or updating Tailscale"
 "${SUDO[@]}" sh "$INSTALLER"

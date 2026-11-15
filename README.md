@@ -57,3 +57,16 @@
 scp scripts/install-tailscale.sh lev@raspberrypi.local:
 ssh lev@raspberrypi.local -t 'sudo bash install-tailscale.sh'
 ```
+
+## Maintenance
+
+`bootstrap.sh` installs normal Raspberry Pi OS updates but skips `rpi-update` by
+default. Use firmware updates only when needed for a known issue:
+
+```shell
+ssh lev@raspberrypi.local -t 'sudo RPI_UPDATE=1 bash bootstrap.sh'
+```
+
+The Argon, Docker, and Tailscale installation scripts are downloaded over HTTPS to a
+temporary file before execution. For a fully reproducible build, use a reviewed,
+checksum-verified installer URL through the corresponding `*_INSTALL_URL` variable.
