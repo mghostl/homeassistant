@@ -48,6 +48,10 @@ for dir_name in blueprints themes packages dashboards; do
     fi
 done
 
+if [ -f "$SOURCE_DIR/www/resource-breakdown-card.js" ]; then
+    MANAGED_PATHS+=(www/resource-breakdown-card.js)
+fi
+
 if [ "${#MANAGED_PATHS[@]}" -eq 0 ]; then
     echo "No deployable Home Assistant config found in $SOURCE_DIR"
     exit 1
@@ -222,7 +226,7 @@ BACKUP_PATH="$BACKUP_DIR/homeassistant-config-before-deploy-$TIMESTAMP.tar.gz"
 mkdir -p "$BACKUP_DIR"
 
 EXISTING_PATHS=()
-for path in configuration.yaml automations.yaml scripts.yaml scenes.yaml raspberry-pi-sensors.yaml blueprints themes packages dashboards; do
+for path in configuration.yaml automations.yaml scripts.yaml scenes.yaml raspberry-pi-sensors.yaml blueprints themes packages dashboards www/resource-breakdown-card.js; do
     if [ -e "$CONFIG_DIR/$path" ]; then
         EXISTING_PATHS+=("$path")
     fi
@@ -246,6 +250,11 @@ for dir_name in blueprints themes packages dashboards; do
     fi
 done
 
+if [ -f "$SOURCE_DIR/www/resource-breakdown-card.js" ]; then
+    mkdir -p "$CONFIG_DIR/www"
+    install -m 0644 "$SOURCE_DIR/www/resource-breakdown-card.js" "$CONFIG_DIR/www/resource-breakdown-card.js"
+fi
+
 rm -f "$CONFIG_DIR/secrets.yaml.example" "$CONFIG_DIR/secrets.yml.example" "$CONFIG_DIR/README.md"
 
 if [ "$RESTART" = "1" ]; then
@@ -261,6 +270,7 @@ if [ "$RESTART" = "1" ]; then
             rm -rf "$CONFIG_DIR/configuration.yaml" "$CONFIG_DIR/automations.yaml" \
                 "$CONFIG_DIR/scripts.yaml" "$CONFIG_DIR/scenes.yaml" "$CONFIG_DIR/blueprints" \
                 "$CONFIG_DIR/raspberry-pi-sensors.yaml" \
+                "$CONFIG_DIR/www/resource-breakdown-card.js" \
                 "$CONFIG_DIR/themes" "$CONFIG_DIR/packages" "$CONFIG_DIR/dashboards"
             tar -C "$CONFIG_DIR" -xzf "$BACKUP_PATH"
             docker restart "$CONTAINER_NAME" >/dev/null

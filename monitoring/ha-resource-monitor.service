@@ -1,0 +1,13 @@
+[Unit]
+Description=Home Assistant host resource monitor
+
+[Service]
+ExecStart=/usr/bin/python3 %h/.local/lib/ha-resource-monitor/monitor-host-resources.py
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+RestrictAddressFamilies=AF_UNIX AF_INET
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,118 @@
+# Package filenames must use Home Assistant slug names (underscores).
+# The collector listens only on the host loopback interface. Home Assistant
+# Container uses host networking, so it can read the API without exposing it.
+rest:
+  - resource: http://127.0.0.1:8766/latest
+    scan_interval: 60
+    timeout: 10
+    sensor:
+      - name: Raspberry Pi resource snapshot
+        unique_id: raspberry_pi_resource_snapshot
+        value_template: "{{ value_json.epoch | default(0) }}"
+        json_attributes:
+          - valid
+          - epoch
+          - timestamp
+          - interval_seconds
+          - cpu
+          - memory
+          - groups
+          - top_cpu
+          - top_memory
+          - container_cpu
+          - host_process_cpu
+          - container_rss_mib
+          - host_process_rss_mib
+          - process_count
+          - unreadable_processes
+          - error
+  - resource: http://127.0.0.1:8766/timeline
+    scan_interval: 60
+    timeout: 10
+    sensor:
+      - name: Raspberry Pi resource timeline
+        unique_id: raspberry_pi_resource_timeline
+        value_template: "{{ value_json.epoch | default(0) }}"
+        json_attributes:
+          - valid
+          - points
+          - earliest
+  - resource_template: >-
+      http://127.0.0.1:8766/history?at={{ as_timestamp(states('input_datetime.raspberry_pi_resource_time'), 0) | int }}
+    scan_interval: 3600
+    timeout: 10
+    sensor:
+      - name: Raspberry Pi resource history
+        unique_id: raspberry_pi_resource_history
+        value_template: "{{ value_json.epoch | default(0) }}"
+        json_attributes:
+          - valid
+          - requested_epoch
+          - epoch
+          - timestamp
+          - interval_seconds
+          - cpu
+          - memory
+          - groups
+          - top_cpu
+          - top_memory
+          - process_count
+          - unreadable_processes
+          - error
+
+input_datetime:
+  raspberry_pi_resource_time:
+    name: Resource breakdown time
+    has_date: true
+    has_time: true
+
+input_boolean:
+  raspberry_pi_resource_history:
+    name: Show historical resource breakdown
+    initial: false
+
+# Snapshots have variable process lists. Their seven-day history lives in the
+# collector's SQLite database; only compact numeric sensors enter HA recorder.
+recorder:
+  exclude:
+    entities:
+      - sensor.raspberry_pi_resource_snapshot
+      - sensor.raspberry_pi_resource_timeline
+      - sensor.raspberry_pi_resource_history
+
+template:
+  - sensor:
+      - name: Raspberry Pi container CPU
+        unique_id: raspberry_pi_container_cpu
+        unit_of_measurement: "%"
+        state_class: measurement
+        availability: >-
+          {{ state_attr('sensor.raspberry_pi_resource_snapshot', 'valid') == true
+             and as_timestamp(now()) - (states('sensor.raspberry_pi_resource_snapshot') | float(0)) < 180 }}
+        state: "{{ state_attr('sensor.raspberry_pi_resource_snapshot', 'container_cpu') }}"
+      - name: Raspberry Pi host process CPU
+        unique_id: raspberry_pi_host_process_cpu
+        unit_of_measurement: "%"
+        state_class: measurement
+        availability: >-
+          {{ state_attr('sensor.raspberry_pi_resource_snapshot', 'valid') == true
+             and as_timestamp(now()) - (states('sensor.raspberry_pi_resource_snapshot') | float(0)) < 180 }}
+        state: "{{ state_attr('sensor.raspberry_pi_resource_snapshot', 'host_process_cpu') }}"
+      - name: Raspberry Pi container RSS
+        unique_id: raspberry_pi_container_rss
+        unit_of_measurement: MiB
+        device_class: data_size
+        state_class: measurement
+        availability: >-
+          {{ state_attr('sensor.raspberry_pi_resource_snapshot', 'valid') == true
+             and as_timestamp(now()) - (states('sensor.raspberry_pi_resource_snapshot') | float(0)) < 180 }}
+        state: "{{ state_attr('sensor.raspberry_pi_resource_snapshot', 'container_rss_mib') }}"
+      - name: Raspberry Pi host process RSS
+        unique_id: raspberry_pi_host_process_rss
+        unit_of_measurement: MiB
+        device_class: data_size
+        state_class: measurement
+        availability: >-
+          {{ state_attr('sensor.raspberry_pi_resource_snapshot', 'valid') == true
+             and as_timestamp(now()) - (states('sensor.raspberry_pi_resource_snapshot') | float(0)) < 180 }}
+        state: "{{ state_attr('sensor.raspberry_pi_resource_snapshot', 'host_process_rss_mib') }}"

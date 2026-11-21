@@ -16,6 +16,8 @@ Tracked files include:
 - `scenes.yaml`
 - `blueprints/**/*.yaml`
 - `dashboards/**/*.yaml`
+- `packages/**/*.yaml`
+- `www/resource-breakdown-card.js`
 - `themes/`
 
 ## Raspberry Pi monitoring
@@ -49,6 +51,68 @@ bind-mounted at `/config`, rather than the container's writable image layer.
 These values describe the Pi and all its workloads, rather than Home Assistant
 alone. A different installation must expose the same thermal path and host
 metrics. Keep these stable entity IDs if renaming sensors in the UI.
+
+### Clickable process and service history
+
+CPU and memory gauges open the **Resource breakdown** tab. Select a dot on the
+CPU/memory chart to load the workload and process snapshot for that moment, or
+use **Investigate a time** to select a minute from the last seven days.
+**Show live** returns to current readings. Snapshot selection is shared between
+dashboard sessions through Home Assistant helpers.
+
+The breakdown groups all readable host processes by Docker container, systemd
+service, or process name, including processes running outside Docker. It also
+lists the top 20 individual processes by CPU or resident memory. Container names
+are refreshed every five minutes; IDs are shown if Docker metadata is unavailable.
+The PID is diagnostic only; workload history does not depend on it.
+
+Copy this repository to the intended Raspberry Pi, then install the collector as
+the normal SSH user (not root):
+
+```sh
+bash scripts/install-resource-monitor.sh
+```
+
+The installer requires host `python3-psutil` and an already enabled lingering user
+session (`loginctl show-user "$USER" -p Linger`). It prints the necessary setup
+command if either is missing. The user service starts at boot, samples every
+60 seconds, and serves only read-only endpoints on `127.0.0.1:8766`. Home Assistant
+Container must retain host networking to read them. The collector reads process
+statistics and cgroups; it never collects command lines or environment variables.
+It uses the SSH account's existing Docker access only to read container names.
+
+Deploy Home Assistant configuration after installing the collector. The deployment
+includes `packages/host_resources.yaml` and `www/resource-breakdown-card.js`. Local
+dashboard JavaScript resources are declared in `configuration.yaml`; if adding
+other custom cards, declare their resources there too. Other files in `www` are
+preserved. Reload the dashboard after deployment to load its new card.
+
+History starts when the collector is installed. Seven days of one-minute snapshots
+are retained in `~/.local/share/ha-resource-monitor/history.sqlite3`; the chart
+displays five-minute samples from the last 24 hours. CPU is averaged over the
+sampling interval and normalized across all CPU cores. Processes that start and
+exit between samples cannot be attributed. Memory uses RSS, which can double-count
+shared pages; it does not reconcile exactly with host RAM usage, kernel memory, or
+filesystem cache. Disk gauges still show total filesystem space, not file ownership.
+
+Large process snapshots are excluded from Home Assistant's recorder; four compact
+numeric sensors retain container/other-host CPU and RSS history there. The host
+collector's database is outside Home Assistant backups. Stop collection with
+`systemctl --user disable --now ha-resource-monitor.service`; this preserves history.
+Inspect it with `systemctl --user status ha-resource-monitor.service` and
+`journalctl --user -u ha-resource-monitor.service`.
+
+Validation on Debian 13.5 / Home Assistant Container 2026.5.2 includes Python
+history/attribution tests, JavaScript interaction tests, Home Assistant's config
+checker, and live dashboard graph selection. Run Python checks on the Pi with
+`python3-psutil` installed, and JavaScript checks locally with Node.js:
+
+```sh
+python3 -m unittest discover -s tests -v
+node --test tests/resource-breakdown-card.test.cjs
+bash -n scripts/install-resource-monitor.sh
+bash -n scripts/deploy-ha-config.sh
+```
 
 ## Stable Entity IDs
 

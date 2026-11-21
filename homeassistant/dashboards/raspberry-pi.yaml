@@ -17,6 +17,9 @@ views:
       - type: gauge
         entity: sensor.raspberry_pi_cpu_usage
         name: CPU usage
+        tap_action:
+          action: navigate
+          navigation_path: /dashboard-raspberry-pi/resources
         min: 0
         max: 100
         severity:
@@ -26,6 +29,9 @@ views:
       - type: gauge
         entity: sensor.raspberry_pi_memory_usage
         name: Memory usage
+        tap_action:
+          action: navigate
+          navigation_path: /dashboard-raspberry-pi/resources
         min: 0
         max: 100
         severity:
@@ -51,14 +57,9 @@ views:
             name: System load (5 minutes)
           - entity: sensor.raspberry_pi_disk_free
             name: Storage available
-      - type: history-graph
-        title: CPU and memory — 24 hours
-        hours_to_show: 24
-        entities:
-          - entity: sensor.raspberry_pi_cpu_usage
-            name: CPU
-          - entity: sensor.raspberry_pi_memory_usage
-            name: Memory
+      - type: custom:resource-breakdown-card
+        title: CPU and memory — select a point
+        compact: true
       - type: history-graph
         title: CPU temperature — 24 hours
         hours_to_show: 24
@@ -90,3 +91,25 @@ views:
           - max
         entities:
           - sensor.raspberry_pi_cpu_temperature
+  - title: Resource breakdown
+    path: resources
+    icon: mdi:format-list-bulleted
+    cards:
+      - type: custom:resource-breakdown-card
+        title: Host resource breakdown
+      - type: history-graph
+        title: CPU — containers and other host processes
+        hours_to_show: 24
+        entities:
+          - entity: sensor.raspberry_pi_container_cpu
+            name: Containers
+          - entity: sensor.raspberry_pi_host_process_cpu
+            name: Other host processes
+      - type: history-graph
+        title: Resident memory — shared pages may be counted more than once
+        hours_to_show: 24
+        entities:
+          - entity: sensor.raspberry_pi_container_rss
+            name: Containers
+          - entity: sensor.raspberry_pi_host_process_rss
+            name: Other host processes
