@@ -58,6 +58,12 @@ scp scripts/install-tailscale.sh lev@raspberrypi.local:
 ssh lev@raspberrypi.local -t 'sudo bash install-tailscale.sh'
 ```
 
+## MCP server
+
+Enable the built-in Model Context Protocol integration using the
+[MCP setup instructions](homeassistant/README.md#mcp-server). It lets MCP clients
+connect to Home Assistant without installing another container or add-on.
+
 ## Raspberry Pi monitoring
 
 The [Raspberry Pi dashboard](homeassistant/README.md#raspberry-pi-monitoring)

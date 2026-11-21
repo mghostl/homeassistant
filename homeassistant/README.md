@@ -20,6 +20,38 @@ Tracked files include:
 - `www/resource-breakdown-card.js`
 - `themes/`
 
+## MCP server
+
+Use Home Assistant's built-in [Model Context Protocol integration](https://www.home-assistant.io/integrations/mcp_server/)
+to let an AI client access Home Assistant. It works with this Container installation;
+no additional Docker container or add-on is needed.
+
+1. Open your Home Assistant instance as an administrator.
+2. Go to **Settings > Devices & services > Add integration** and select
+   **Model Context Protocol Server** (called **Model Context Protocol** in newer
+   releases). Select **Assist** in the setup form on Home Assistant 2026.5.
+3. Expose the intended entities under **Settings > Voice assistants > Expose**.
+   Assist limits device access to those exposed entities.
+4. Use the MCP endpoint `http://<home-assistant-host>:8123/api/mcp`.
+   On newer releases, copy the URL from **Settings > System > AI** and configure
+   the available tool sets there. Select **Device control** for device access,
+   or enable **Read-only** to allow inspection only, when those options exist.
+5. Add the copied URL to your MCP client and sign in with Home Assistant when
+   prompted. The client must be able to reach the address: a local or Tailscale
+   address works only for clients on that network. Cloud clients need a reachable
+   external URL, such as Home Assistant Cloud.
+
+Newer releases default to exposing all AI tool sets and requiring an administrator.
+Review those options before connecting a client. Home Assistant 2026.5 instead
+asks which API to expose during integration setup.
+
+To verify the connection, list tools in the client and request the state of an
+exposed entity before trying a device action.
+
+This integration is managed through the UI, rather than `configuration.yaml`.
+`scripts/deploy-ha-config.sh` does not enable it or copy its `.storage` state.
+Keep client credentials and tokens out of this repository.
+
 ## Raspberry Pi monitoring
 
 `raspberry-pi-sensors.yaml` defines seven read-only
