@@ -58,6 +58,12 @@ scp scripts/install-tailscale.sh lev@raspberrypi.local:
 ssh lev@raspberrypi.local -t 'sudo bash install-tailscale.sh'
 ```
 
+## Raspberry Pi monitoring
+
+The [Raspberry Pi dashboard](homeassistant/README.md#raspberry-pi-monitoring)
+shows CPU usage and temperature, memory, storage, system load, and boot time.
+Its sensors and dashboard are managed in this repository.
+
 ## Maintenance
 
 `bootstrap.sh` installs normal Raspberry Pi OS updates but skips `rpi-update` by

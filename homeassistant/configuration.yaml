@@ -2,6 +2,9 @@
 # Loads default set of integrations. Do not remove.
 default_config:
 
+# Host monitoring is kept in a separate, deployable YAML file.
+command_line: !include raspberry-pi-sensors.yaml
+
 # Load frontend themes from the themes folder
 frontend:
   themes: !include_dir_merge_named themes
@@ -54,6 +57,12 @@ input_datetime:
 
 lovelace:
   dashboards:
+    dashboard-raspberry-pi:
+      mode: yaml
+      filename: dashboards/raspberry-pi.yaml
+      title: Raspberry Pi
+      icon: mdi:raspberry-pi
+      show_in_sidebar: true
     dashboard-vacuum:
       mode: yaml
       filename: dashboards/vacuum.yaml

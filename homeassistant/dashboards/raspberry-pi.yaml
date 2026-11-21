@@ -1,0 +1,92 @@
+title: Raspberry Pi
+views:
+  - title: Overview
+    path: overview
+    icon: mdi:raspberry-pi
+    cards:
+      - type: gauge
+        entity: sensor.raspberry_pi_cpu_temperature
+        name: CPU temperature
+        min: 0
+        max: 100
+        needle: true
+        severity:
+          green: 0
+          yellow: 70
+          red: 80
+      - type: gauge
+        entity: sensor.raspberry_pi_cpu_usage
+        name: CPU usage
+        min: 0
+        max: 100
+        severity:
+          green: 0
+          yellow: 70
+          red: 90
+      - type: gauge
+        entity: sensor.raspberry_pi_memory_usage
+        name: Memory usage
+        min: 0
+        max: 100
+        severity:
+          green: 0
+          yellow: 80
+          red: 95
+      - type: gauge
+        entity: sensor.raspberry_pi_disk_usage
+        name: Home Assistant storage usage
+        min: 0
+        max: 100
+        severity:
+          green: 0
+          yellow: 80
+          red: 90
+      - type: entities
+        title: Host details
+        show_header_toggle: false
+        entities:
+          - entity: sensor.raspberry_pi_last_boot
+            name: Last boot
+          - entity: sensor.raspberry_pi_load_5m
+            name: System load (5 minutes)
+          - entity: sensor.raspberry_pi_disk_free
+            name: Storage available
+      - type: history-graph
+        title: CPU and memory — 24 hours
+        hours_to_show: 24
+        entities:
+          - entity: sensor.raspberry_pi_cpu_usage
+            name: CPU
+          - entity: sensor.raspberry_pi_memory_usage
+            name: Memory
+      - type: history-graph
+        title: CPU temperature — 24 hours
+        hours_to_show: 24
+        entities:
+          - entity: sensor.raspberry_pi_cpu_temperature
+            name: CPU temperature
+  - title: History
+    path: history
+    icon: mdi:chart-line
+    cards:
+      - type: statistics-graph
+        title: Resource usage — 7 days
+        chart_type: line
+        period: hour
+        days_to_show: 7
+        stat_types:
+          - mean
+        entities:
+          - sensor.raspberry_pi_cpu_usage
+          - sensor.raspberry_pi_memory_usage
+          - sensor.raspberry_pi_disk_usage
+      - type: statistics-graph
+        title: CPU temperature — 7 days
+        chart_type: line
+        period: hour
+        days_to_show: 7
+        stat_types:
+          - mean
+          - max
+        entities:
+          - sensor.raspberry_pi_cpu_temperature

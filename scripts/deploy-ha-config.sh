@@ -222,7 +222,7 @@ BACKUP_PATH="$BACKUP_DIR/homeassistant-config-before-deploy-$TIMESTAMP.tar.gz"
 mkdir -p "$BACKUP_DIR"
 
 EXISTING_PATHS=()
-for path in configuration.yaml automations.yaml scripts.yaml scenes.yaml blueprints themes packages dashboards; do
+for path in configuration.yaml automations.yaml scripts.yaml scenes.yaml raspberry-pi-sensors.yaml blueprints themes packages dashboards; do
     if [ -e "$CONFIG_DIR/$path" ]; then
         EXISTING_PATHS+=("$path")
     fi
@@ -260,6 +260,7 @@ if [ "$RESTART" = "1" ]; then
             echo "Rolling back managed configuration from $BACKUP_PATH" >&2
             rm -rf "$CONFIG_DIR/configuration.yaml" "$CONFIG_DIR/automations.yaml" \
                 "$CONFIG_DIR/scripts.yaml" "$CONFIG_DIR/scenes.yaml" "$CONFIG_DIR/blueprints" \
+                "$CONFIG_DIR/raspberry-pi-sensors.yaml" \
                 "$CONFIG_DIR/themes" "$CONFIG_DIR/packages" "$CONFIG_DIR/dashboards"
             tar -C "$CONFIG_DIR" -xzf "$BACKUP_PATH"
             docker restart "$CONTAINER_NAME" >/dev/null

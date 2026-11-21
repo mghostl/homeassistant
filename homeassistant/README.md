@@ -18,6 +18,38 @@ Tracked files include:
 - `dashboards/**/*.yaml`
 - `themes/`
 
+## Raspberry Pi monitoring
+
+`raspberry-pi-sensors.yaml` defines seven read-only
+[Command Line sensors](https://www.home-assistant.io/integrations/command_line/).
+They use Python and `psutil` already bundled in Home Assistant Container; no
+extra containers, packages, custom cards, or UI integration setup are required.
+Deploy using `scripts/deploy-ha-config.sh`, which validates configuration,
+backs up the managed files, and restarts Home Assistant.
+
+The **Raspberry Pi** sidebar dashboard (`/dashboard-raspberry-pi/overview`)
+has an Overview tab with gauges and 24-hour graphs, plus a History tab with
+seven-day hourly statistics. History accumulates after deployment; the existing
+recorder retains ten days and records these sensors. Gauge colors are visual
+indicators, not notification automations.
+
+| Entity | Measurement | Interval |
+| --- | --- | --- |
+| `sensor.raspberry_pi_cpu_usage` | Host CPU usage sampled over one second | 60 seconds |
+| `sensor.raspberry_pi_cpu_temperature` | Raspberry Pi thermal zone 0, °C | 60 seconds |
+| `sensor.raspberry_pi_memory_usage` | Host RAM usage | 60 seconds |
+| `sensor.raspberry_pi_disk_usage` | Filesystem containing `/config`, percent used | 300 seconds |
+| `sensor.raspberry_pi_disk_free` | Available space on that filesystem, GiB | 300 seconds |
+| `sensor.raspberry_pi_load_5m` | Host five-minute load average | 60 seconds |
+| `sensor.raspberry_pi_last_boot` | Host boot timestamp | 300 seconds |
+
+The container reads host CPU, memory, load, and boot information through Linux
+`/proc`, and temperature through `/sys`. Storage measures the host filesystem
+bind-mounted at `/config`, rather than the container's writable image layer.
+These values describe the Pi and all its workloads, rather than Home Assistant
+alone. A different installation must expose the same thermal path and host
+metrics. Keep these stable entity IDs if renaming sensors in the UI.
+
 ## Stable Entity IDs
 
 Automations should target named Home Assistant entities instead of generated device

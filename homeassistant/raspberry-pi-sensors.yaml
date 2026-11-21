@@ -1,0 +1,63 @@
+# Commands run inside Home Assistant Container. Linux /proc and /sys expose
+# host CPU, memory, load, boot time and temperature; /config is a host bind mount.
+- sensor:
+    name: Raspberry Pi CPU usage
+    unique_id: raspberry_pi_cpu_usage
+    command: >-
+      python3 -c 'import psutil; print(psutil.cpu_percent(interval=1))'
+    unit_of_measurement: "%"
+    state_class: measurement
+    icon: mdi:cpu-64-bit
+    scan_interval: 60
+- sensor:
+    name: Raspberry Pi CPU temperature
+    unique_id: raspberry_pi_cpu_temperature
+    command: >-
+      python3 -c 'from pathlib import Path; print(round(float(Path("/sys/class/thermal/thermal_zone0/temp").read_text()) / 1000, 1))'
+    unit_of_measurement: "°C"
+    device_class: temperature
+    state_class: measurement
+    scan_interval: 60
+- sensor:
+    name: Raspberry Pi memory usage
+    unique_id: raspberry_pi_memory_usage
+    command: >-
+      python3 -c 'import psutil; print(psutil.virtual_memory().percent)'
+    unit_of_measurement: "%"
+    state_class: measurement
+    icon: mdi:memory
+    scan_interval: 60
+- sensor:
+    name: Raspberry Pi disk usage
+    unique_id: raspberry_pi_disk_usage
+    command: >-
+      python3 -c 'import psutil; print(psutil.disk_usage("/config").percent)'
+    unit_of_measurement: "%"
+    state_class: measurement
+    icon: mdi:harddisk
+    scan_interval: 300
+- sensor:
+    name: Raspberry Pi disk free
+    unique_id: raspberry_pi_disk_free
+    command: >-
+      python3 -c 'import psutil; print(round(psutil.disk_usage("/config").free / 1024**3, 1))'
+    unit_of_measurement: GiB
+    device_class: data_size
+    state_class: measurement
+    scan_interval: 300
+- sensor:
+    name: Raspberry Pi load 5m
+    unique_id: raspberry_pi_load_5m
+    command: >-
+      python3 -c 'import os; print(round(os.getloadavg()[1], 2))'
+    state_class: measurement
+    icon: mdi:chart-line
+    scan_interval: 60
+- sensor:
+    name: Raspberry Pi last boot
+    unique_id: raspberry_pi_last_boot
+    command: >-
+      python3 -c 'import psutil; from datetime import datetime, timezone; print(datetime.fromtimestamp(psutil.boot_time(), timezone.utc).isoformat())'
+    device_class: timestamp
+    icon: mdi:restart
+    scan_interval: 300
