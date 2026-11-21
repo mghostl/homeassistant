@@ -1,0 +1,178 @@
+# Persistent notifications are deduplicated by incident ID and dismissed only
+# after a confirmed recovery. Unknown/unavailable measurements are not recovery.
+template:
+  - binary_sensor:
+      - name: Raspberry Pi high temperature
+        unique_id: raspberry_pi_high_temperature
+        device_class: problem
+        availability: "{{ is_number(states('sensor.raspberry_pi_cpu_temperature')) }}"
+        state: >-
+          {{ states('sensor.raspberry_pi_cpu_temperature') | float(0)
+             > (70 if this.state == 'on' else 75) }}
+        delay_on: '00:05:00'
+        delay_off: '00:02:00'
+        attributes:
+          notification_id: raspberry_pi_temperature
+          alert_title: Raspberry Pi is too hot
+          alert_message: >-
+            CPU temperature is {{ states('sensor.raspberry_pi_cpu_temperature') }} °C.
+            It exceeded 75 °C for five minutes. Check cooling and airflow.
+      - name: Raspberry Pi storage warning
+        unique_id: raspberry_pi_storage_warning
+        device_class: problem
+        availability: "{{ is_number(states('sensor.raspberry_pi_disk_usage')) }}"
+        state: >-
+          {{ states('sensor.raspberry_pi_disk_usage') | float(0)
+             > (80 if this.state == 'on' else 85) }}
+        delay_on: '00:15:00'
+        delay_off: '00:05:00'
+        attributes:
+          notification_id: raspberry_pi_storage
+          alert_title: Raspberry Pi storage is nearly full
+          alert_message: >-
+            The Home Assistant filesystem is {{ states('sensor.raspberry_pi_disk_usage') }}% full,
+            with {{ states('sensor.raspberry_pi_disk_free') }} GiB available.
+            Usage exceeded 85% for fifteen minutes. Check backups, logs, and database size.
+      - name: Raspberry Pi storage critical
+        unique_id: raspberry_pi_storage_critical
+        device_class: problem
+        availability: "{{ is_number(states('sensor.raspberry_pi_disk_usage')) }}"
+        state: >-
+          {{ states('sensor.raspberry_pi_disk_usage') | float(0)
+             > (90 if this.state == 'on' else 95) }}
+        delay_off: '00:05:00'
+        attributes:
+          notification_id: raspberry_pi_storage
+          alert_title: Raspberry Pi storage is critically full
+          alert_message: >-
+            The Home Assistant filesystem is {{ states('sensor.raspberry_pi_disk_usage') }}% full,
+            with {{ states('sensor.raspberry_pi_disk_free') }} GiB available.
+            Usage exceeded 95%. Free space promptly to keep Home Assistant and databases working.
+      - name: Raspberry Pi low available memory
+        unique_id: raspberry_pi_low_available_memory
+        device_class: problem
+        availability: "{{ is_number(states('sensor.raspberry_pi_memory_usage')) }}"
+        state: >-
+          {{ states('sensor.raspberry_pi_memory_usage') | float(0)
+             > (90 if this.state == 'on' else 95) }}
+        delay_on: '00:10:00'
+        delay_off: '00:05:00'
+        attributes:
+          notification_id: raspberry_pi_memory
+          alert_title: Raspberry Pi has little available memory
+          alert_message: >-
+            Available RAM is {{ (100 - states('sensor.raspberry_pi_memory_usage') | float(0)) | round(1) }}%.
+            It stayed below 5% for ten minutes. Inspect the memory breakdown for the largest workloads.
+      - name: Raspberry Pi sustained CPU load
+        unique_id: raspberry_pi_sustained_cpu_load
+        device_class: problem
+        availability: >-
+          {{ is_number(state_attr('sensor.raspberry_pi_resource_snapshot', 'cpu'))
+             and state_attr('sensor.raspberry_pi_resource_snapshot', 'valid') == true
+             and as_timestamp(now()) - (state_attr('sensor.raspberry_pi_resource_snapshot', 'epoch') | float(0)) < 180 }}
+        state: >-
+          {{ state_attr('sensor.raspberry_pi_resource_snapshot', 'cpu') | float(0)
+             > (75 if this.state == 'on' else 90) }}
+        delay_on: '00:15:00'
+        delay_off: '00:05:00'
+        attributes:
+          notification_id: raspberry_pi_cpu
+          alert_title: Raspberry Pi CPU is busy for a sustained period
+          alert_message: >-
+            CPU usage is {{ state_attr('sensor.raspberry_pi_resource_snapshot', 'cpu') | float(0) | round(1) }}%.
+            It exceeded 90% for fifteen minutes (one-minute averages).
+            Busiest workloads at detection:
+            {% for group in (state_attr('sensor.raspberry_pi_resource_snapshot', 'groups') or [])[:5] %}
+            {{ group.name }} ({{ group.cpu }}% CPU){{ '; ' if not loop.last else '.' }}
+            {% endfor %}
+      - name: Raspberry Pi monitoring stopped
+        unique_id: raspberry_pi_monitoring_stopped
+        device_class: problem
+        state: >-
+          {% set sample = states.sensor.raspberry_pi_resource_snapshot %}
+          {% set epoch = state_attr('sensor.raspberry_pi_resource_snapshot', 'epoch') | float(0) %}
+          {% if epoch > 0 %}
+            {{ as_timestamp(now()) - epoch >= 180 }}
+          {% elif sample is defined and sample is not none %}
+            {{ as_timestamp(now()) - as_timestamp(sample.last_changed) >= 180 }}
+          {% elif this is defined and this is not none %}
+            {{ this.state == 'on' or
+               (this.state == 'off' and as_timestamp(now()) - as_timestamp(this.last_changed) >= 180) }}
+          {% else %}
+            false
+          {% endif %}
+        delay_off: '00:01:00'
+        attributes:
+          notification_id: raspberry_pi_monitoring
+          alert_title: Raspberry Pi resource monitoring stopped
+          alert_message: >-
+            No fresh host resource sample has arrived for at least three minutes.
+            Last recorded sample: {{ state_attr('sensor.raspberry_pi_resource_snapshot', 'timestamp') or 'none' }}.
+            Check the ha-resource-monitor user service on the Pi.
+
+automation:
+  - id: raspberry_pi_resource_notifications
+    alias: Raspberry Pi resource notifications
+    description: Notify once per problem, upgrade storage severity, and clear after recovery.
+    triggers:
+      - trigger: state
+        entity_id:
+          - binary_sensor.raspberry_pi_high_temperature
+          - binary_sensor.raspberry_pi_storage_warning
+          - binary_sensor.raspberry_pi_storage_critical
+          - binary_sensor.raspberry_pi_low_available_memory
+          - binary_sensor.raspberry_pi_sustained_cpu_load
+          - binary_sensor.raspberry_pi_monitoring_stopped
+        to:
+          - 'on'
+          - 'off'
+      - trigger: homeassistant
+        event: start
+    conditions:
+      - condition: template
+        value_template: >-
+          {{ trigger.platform == 'homeassistant' or trigger.from_state is not none }}
+    actions:
+      - if: "{{ trigger.platform == 'homeassistant' }}"
+        then:
+          - delay: '00:00:30'
+      - variables:
+          changed_entities: >-
+            {{ ['binary_sensor.raspberry_pi_high_temperature',
+                'binary_sensor.raspberry_pi_storage_warning',
+                'binary_sensor.raspberry_pi_low_available_memory',
+                'binary_sensor.raspberry_pi_sustained_cpu_load',
+                'binary_sensor.raspberry_pi_monitoring_stopped']
+               if trigger.platform == 'homeassistant' else [trigger.entity_id] }}
+      - repeat:
+          for_each: "{{ changed_entities }}"
+          sequence:
+            - variables:
+                alert_entity: >-
+                  {% if repeat.item in ['binary_sensor.raspberry_pi_storage_warning', 'binary_sensor.raspberry_pi_storage_critical'] %}
+                    {{ 'binary_sensor.raspberry_pi_storage_critical'
+                       if is_state('binary_sensor.raspberry_pi_storage_critical', 'on')
+                       else 'binary_sensor.raspberry_pi_storage_warning' }}
+                  {% else %}
+                    {{ repeat.item }}
+                  {% endif %}
+            - choose:
+                - conditions: "{{ is_state(alert_entity, 'on') }}"
+                  sequence:
+                    - action: persistent_notification.create
+                      data:
+                        notification_id: "{{ state_attr(alert_entity, 'notification_id') }}"
+                        title: "{{ state_attr(alert_entity, 'alert_title') }}"
+                        message: >-
+                          {{ state_attr(alert_entity, 'alert_message') }}
+
+                          Detected: {{ now().strftime('%Y-%m-%d %H:%M:%S %Z') }}.
+
+                          [Inspect resource usage](/dashboard-raspberry-pi/resources).
+                - conditions: "{{ is_state(alert_entity, 'off') }}"
+                  sequence:
+                    - action: persistent_notification.dismiss
+                      data:
+                        notification_id: "{{ state_attr(alert_entity, 'notification_id') }}"
+    mode: queued
+    max: 20

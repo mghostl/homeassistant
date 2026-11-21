@@ -114,6 +114,42 @@ bash -n scripts/install-resource-monitor.sh
 bash -n scripts/deploy-ha-config.sh
 ```
 
+### Resource alerts
+
+`packages/resource_alerts.yaml` adds persistent Home Assistant notifications and
+a **Resource alerts** status card on the Raspberry Pi Overview tab. Notifications
+appear under the Home Assistant notification bell and link to the resource
+breakdown. CPU alerts include the five busiest workloads at detection.
+
+| Problem | Notify after | Clear after |
+| --- | --- | --- |
+| High temperature | Above 75 °C for 5 minutes | At or below 70 °C for 2 minutes |
+| Storage warning | Above 85% used for 15 minutes | At or below 80% for 5 minutes |
+| Storage critical | Above 95% used, at the next disk sample | Downgrade at or below 90% for 5 minutes; warning may remain |
+| Low available memory | Below 5% available RAM for 10 minutes | At least 10% available for 5 minutes |
+| Sustained CPU load | Above 90% for 15 minutes, using one-minute averages | At or below 75% for 5 minutes |
+| Monitoring stopped | Last sample at least 3 minutes old, or missing source for 3 minutes | Fresh data for 1 minute |
+
+Storage warning and critical share one notification ID; critical takes priority.
+Other problems each have their own stable ID. Notifications update on problem or
+severity transitions, rather than repeating every sample, and are dismissed after
+confirmed recovery. Unavailable measurements do not dismiss existing alerts.
+Manually dismissed notifications stay quiet until another transition or restart;
+the status card continues to show the problem.
+
+Home Assistant reconciles notifications 30 seconds after startup. Sustained-condition
+and recovery timers restart when Home Assistant or template entities reload.
+Status indicators may take up to five minutes to settle during their initial
+recovery windows after startup.
+Timestamp checks refresh each minute; storage sensors refresh every five minutes.
+These alerts run inside Home Assistant; they do not provide phone push notifications
+or detect an outage of Home Assistant itself.
+
+`tests/test_resource_alerts.py` runs isolated integration checks inside the Home
+Assistant image, including transient-spike suppression, storage severity changes,
+workload context, unavailable sources, and notification recovery. Plain host Python
+skips these tests when the Home Assistant runtime is absent.
+
 ## Stable Entity IDs
 
 Automations should target named Home Assistant entities instead of generated device

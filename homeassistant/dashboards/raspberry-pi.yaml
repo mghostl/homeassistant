@@ -4,6 +4,23 @@ views:
     path: overview
     icon: mdi:raspberry-pi
     cards:
+      - type: entities
+        title: Resource alerts
+        show_header_toggle: false
+        state_color: true
+        entities:
+          - entity: binary_sensor.raspberry_pi_high_temperature
+            name: High temperature
+          - entity: binary_sensor.raspberry_pi_storage_warning
+            name: Storage warning
+          - entity: binary_sensor.raspberry_pi_storage_critical
+            name: Storage critical
+          - entity: binary_sensor.raspberry_pi_low_available_memory
+            name: Low available memory
+          - entity: binary_sensor.raspberry_pi_sustained_cpu_load
+            name: Sustained CPU load
+          - entity: binary_sensor.raspberry_pi_monitoring_stopped
+            name: Monitoring stopped
       - type: gauge
         entity: sensor.raspberry_pi_cpu_temperature
         name: CPU temperature
