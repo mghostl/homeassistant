@@ -208,10 +208,13 @@ every 15 minutes, so it remains effective after a Home Assistant restart.
 Occupancy does not block cleaning. The enable helper restores its previous
 state after restart unless an `initial` value is configured.
 
-The `Vacuum` dashboard is defined in `dashboards/vacuum.yaml` and exposes
-vacuum status, battery level, the last scheduled start and confirmed completion,
-manual controls for start, pause, and return to base, and the
-`input_boolean.daily_vacuum_enabled` schedule toggle.
+The `Vacuum` dashboard is defined in `dashboards/vacuum.yaml`. Its Controls tab
+shows status, battery, the cleaning map, recent cleaning details, and the weekday
+schedule alongside start, pause, and return-to-base controls. Settings includes
+suction, cleaning and mop modes, dock controls, quiet hours, voice volume, and
+child lock. Maintenance shows tank and error status, remaining service time, and
+lifetime cleaning totals. If you re-pair the vacuum, verify the entity IDs in the
+dashboard against the new device and dock entities.
 
 The real `secrets.yaml` is intentionally ignored because it may contain credentials. Keep only secret names in `secrets.yaml.example`, and maintain the real values directly on the Raspberry Pi or in a private secret manager.
 

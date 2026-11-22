@@ -2,58 +2,194 @@ title: Vacuum
 views:
   - title: Controls
     path: controls
-    icon: mdi:robot-vacuum
-    cards:
-      - type: entities
-        title: Vacuum overview
-        show_header_toggle: false
-        state_color: true
-        entities:
-          - entity: vacuum.roborock_qrevo_master
-            name: Status
-            secondary_info: last-changed
-          - entity: sensor.roborock_qrevo_master_battery
-            name: Battery
-            icon: mdi:battery
-          - entity: input_datetime.daily_vacuum_last_run
-            name: Last scheduled start
-            icon: mdi:play-circle-outline
-          - entity: input_datetime.daily_vacuum_last_completed
-            name: Last completed run
-            icon: mdi:calendar-check
-      - type: horizontal-stack
+    type: sections
+    max_columns: 2
+    sections:
+      - type: grid
         cards:
-          - type: button
-            entity: vacuum.roborock_qrevo_master
-            name: Start
-            icon: mdi:play
+          - type: entities
+            title: Vacuum overview
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - entity: vacuum.roborock_qrevo_master
+                name: Status
+                secondary_info: last-changed
+              - entity: sensor.roborock_qrevo_master_battery
+                name: Battery
+              - entity: binary_sensor.roborock_qrevo_master_charging
+                name: Charging
+          - type: horizontal-stack
+            cards:
+              - type: button
+                entity: vacuum.roborock_qrevo_master
+                name: Start
+                icon: mdi:play
+                tap_action:
+                  action: perform-action
+                  perform_action: vacuum.start
+                  target:
+                    entity_id: vacuum.roborock_qrevo_master
+              - type: button
+                entity: vacuum.roborock_qrevo_master
+                name: Pause
+                icon: mdi:pause
+                tap_action:
+                  action: perform-action
+                  perform_action: vacuum.pause
+                  target:
+                    entity_id: vacuum.roborock_qrevo_master
+              - type: button
+                entity: vacuum.roborock_qrevo_master
+                name: Return to base
+                icon: mdi:home-import-outline
+                tap_action:
+                  action: perform-action
+                  perform_action: vacuum.return_to_base
+                  target:
+                    entity_id: vacuum.roborock_qrevo_master
+          - type: entities
+            title: Daily schedule
+            show_header_toggle: false
+            entities:
+              - entity: input_boolean.daily_vacuum_enabled
+                name: Weekday cleaning
+              - entity: input_datetime.daily_vacuum_last_run
+                name: Last scheduled start
+              - entity: input_datetime.daily_vacuum_last_completed
+                name: Last scheduled completion
+      - type: grid
+        cards:
+          - type: picture-entity
+            entity: image.roborock_qrevo_master_map_0
+            name: Cleaning map
+            show_state: false
             tap_action:
-              action: perform-action
-              perform_action: vacuum.start
-              target:
-                entity_id: vacuum.roborock_qrevo_master
-          - type: button
+              action: more-info
+          - type: entities
+            title: Cleaning details
+            show_header_toggle: false
+            entities:
+              - entity: sensor.roborock_qrevo_master_current_room
+                name: Current room
+              - entity: sensor.roborock_qrevo_master_cleaning_progress
+                name: Progress
+              - entity: sensor.roborock_qrevo_master_cleaning_area
+                name: Area cleaned
+              - entity: sensor.roborock_qrevo_master_cleaning_time
+                name: Cleaning time
+              - entity: sensor.roborock_qrevo_master_last_clean_begin
+                name: Last cleaning started
+              - entity: sensor.roborock_qrevo_master_last_clean_end
+                name: Last cleaning ended
+
+  - title: Settings
+    path: settings
+    type: sections
+    max_columns: 2
+    sections:
+      - type: grid
+        cards:
+          - type: tile
             entity: vacuum.roborock_qrevo_master
-            name: Pause
-            icon: mdi:pause
-            tap_action:
-              action: perform-action
-              perform_action: vacuum.pause
-              target:
-                entity_id: vacuum.roborock_qrevo_master
-          - type: button
-            entity: vacuum.roborock_qrevo_master
-            name: Return to base
-            icon: mdi:home-import-outline
-            tap_action:
-              action: perform-action
-              perform_action: vacuum.return_to_base
-              target:
-                entity_id: vacuum.roborock_qrevo_master
-      - type: button
-        entity: input_boolean.daily_vacuum_enabled
-        name: Daily vacuum schedule
-        icon: mdi:calendar-clock
-        show_state: true
-        tap_action:
-          action: toggle
+            name: Suction power
+            icon: mdi:fan
+            hide_state: true
+            features:
+              - type: vacuum-fan-speed
+            grid_options:
+              columns: full
+          - type: entities
+            title: Cleaning and mopping
+            show_header_toggle: false
+            entities:
+              - entity: select.guestroom_roborock_qrevo_master_cleaning_mode
+                name: Cleaning mode
+              - entity: select.roborock_qrevo_master_mop_mode
+                name: Mop route
+              - entity: select.roborock_qrevo_master_mop_intensity
+                name: Mop intensity
+              - entity: select.roborock_qrevo_master_selected_map
+                name: Selected map
+          - type: entities
+            title: Do not disturb
+            show_header_toggle: false
+            entities:
+              - entity: switch.roborock_qrevo_master_do_not_disturb
+                name: Do not disturb
+              - entity: time.roborock_qrevo_master_do_not_disturb_begin
+                name: Start time
+              - entity: time.roborock_qrevo_master_do_not_disturb_end
+                name: End time
+      - type: grid
+        cards:
+          - type: entities
+            title: Dock controls
+            show_header_toggle: false
+            entities:
+              - entity: select.roborock_qrevo_master_dock_empty_mode
+                name: Auto-empty mode
+              - entity: switch.guestroom_roborock_qrevo_master_dock_dust_emptying
+                name: Dust emptying
+              - entity: switch.guestroom_roborock_qrevo_master_dock_mop_washing
+                name: Mop washing
+              - entity: switch.guestroom_roborock_qrevo_master_dock_mop_drying
+                name: Mop drying
+              - entity: sensor.roborock_qrevo_master_dock_mop_drying_remaining_time
+                name: Drying time remaining
+          - type: entities
+            title: Device preferences
+            show_header_toggle: false
+            entities:
+              - entity: number.roborock_qrevo_master_volume
+                name: Voice volume
+              - entity: switch.roborock_qrevo_master_dock_child_lock
+                name: Child lock
+
+  - title: Maintenance
+    path: maintenance
+    type: sections
+    max_columns: 2
+    sections:
+      - type: grid
+        cards:
+          - type: entities
+            title: Vacuum and dock health
+            show_header_toggle: false
+            entities:
+              - entity: sensor.roborock_qrevo_master_vacuum_error
+                name: Vacuum error
+              - entity: sensor.roborock_qrevo_master_dock_dock_error
+                name: Dock error
+              - entity: binary_sensor.roborock_qrevo_master_dock_clean_water_box
+                name: Clean water tank
+              - entity: binary_sensor.roborock_qrevo_master_dock_dirty_water_box
+                name: Dirty water tank
+              - entity: binary_sensor.roborock_qrevo_master_mop_attached
+                name: Mop attached
+          - type: entities
+            title: Lifetime cleaning
+            show_header_toggle: false
+            entities:
+              - entity: sensor.roborock_qrevo_master_total_cleaning_count
+                name: Cleaning runs
+              - entity: sensor.roborock_qrevo_master_total_cleaning_area
+                name: Area cleaned
+              - entity: sensor.roborock_qrevo_master_total_cleaning_time
+                name: Cleaning time
+      - type: grid
+        cards:
+          - type: entities
+            title: Service time remaining
+            show_header_toggle: false
+            entities:
+              - entity: sensor.roborock_qrevo_master_main_brush_time_left
+                name: Main brush
+              - entity: sensor.roborock_qrevo_master_side_brush_time_left
+                name: Side brush
+              - entity: sensor.roborock_qrevo_master_filter_time_left
+                name: Air filter
+              - entity: sensor.roborock_qrevo_master_sensor_time_left
+                name: Sensors
+              - entity: sensor.roborock_qrevo_master_dock_strainer_time_left
+                name: Dock strainer
