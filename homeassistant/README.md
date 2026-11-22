@@ -233,6 +233,65 @@ Assistant image, including transient-spike suppression, storage severity changes
 workload context, unavailable sources, and notification recovery. Plain host Python
 skips these tests when the Home Assistant runtime is absent.
 
+## Network and Xiaomi routers
+
+Open **Network** in the sidebar. The **Connection health** card on **Overview**
+shows gateway reachability, the internet probe, and DNS resolution separately.
+The other cards show round-trip latency, packet loss, and the Raspberry Pi's
+Wi-Fi signal. **Routers** lists routers imported through Xiaomi Home
+and displays available readings such as the connected-device count. Select a
+router name to open its device page, or **Open router settings** for the
+gateway's local administration page. The default gateway's model, hardware,
+firmware, and country come from the router's public Xiaomi status endpoint
+when it responds. **Run now** refreshes the gateway, internet, and DNS checks.
+**History** shows the last 24 hours of the Pi's network measurements.
+Home Assistant takes one sample per minute, sending three pings each to the
+IPv4 default gateway and Cloudflare's `1.1.1.1`. The DNS check looks up
+`example.com` with the Home Assistant container's configured DNS resolver.
+Latency is the mean of the replies, and the Wi-Fi reading is the Pi's own
+signal in dBm. The Pi's active default-route interface must expose a wireless
+signal for that row to populate.
+
+Install Xiaomi's [Xiaomi Home custom integration](https://github.com/XiaoMi/ha_xiaomi_home)
+in `custom_components/xiaomi_home` using the official release for a new
+installation, then restart Home Assistant. In **Settings > Devices & services >
+Add integration**, choose **Xiaomi Home**, select the region used by the Mi Home
+app, sign in with Xiaomi, and select the home and devices to import.
+If the sign-in page returns to an unreachable `http://homeassistant.local:8123`,
+edit the address in that same browser tab. Replace the scheme, hostname, and
+port with the address you use to open this Home Assistant instance. Preserve
+the entire `/api/webhook/…` path and query string, then press Enter and return
+to the integration setup tab. [Xiaomi's redirect instructions](https://github.com/XiaoMi/ha_xiaomi_home/wiki/OAuth-2.0-login-when-Home-Assistant-URL-is-not-homeassistant.local%3A8123)
+
+The gateway readings work with any router that answers ping. Router-wide
+traffic and client lists require a compatible router integration. The
+[UPnP/IGD integration](https://www.home-assistant.io/integrations/upnp/) can
+provide WAN statistics if the router already advertises that service.
+
+### Local router admin connection
+
+[Network Info v1.8.0](https://github.com/Oose97/ha-network-info/releases/tag/v1.8.0)
+can read client names, connection types, and wireless signal where the router
+provides them. Install its `custom_components/network_info` directory in the
+Home Assistant config directory and restart Home Assistant. In **Devices &
+services > Add integration**, select **Network Info**. Confirm the local subnet,
+set **Router brand** to **Xiaomi / MiWiFi**, and keep the external IP options
+off for local-only monitoring. Enter the gateway's HTTPS address and the
+router's web administration password in the Home Assistant setup form. The
+default Xiaomi username is `admin`.
+
+The **Clients** tab shows online clients from Network Info with their IP
+addresses and connection types. It sorts clients with signal readings by
+weakest signal first. **Scan now** requests a new Network Info client scan
+outside the scheduled polling interval.
+
+The network sensors are read-only and do not need Assist or MCP exposure to
+populate the dashboard. Review imported Xiaomi entities before exposing them.
+
+Verified on Debian 13 (Trixie) with Home Assistant Container 2026.11.2 using
+`scripts/deploy-ha-config.sh`. The `/dashboard-network/history` route responded
+and Home Assistant recorded the gateway, internet, and Wi-Fi measurements.
+
 ## Stable Entity IDs
 
 Automations should target named Home Assistant entities instead of generated device

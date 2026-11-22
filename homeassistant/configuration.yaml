@@ -39,6 +39,7 @@ recorder:
       - switch.roborock_qrevo_master_*
     entities:
       - sun.sun
+      - sensor.network_probe
 
 input_boolean:
   daily_vacuum_enabled:
@@ -85,6 +86,12 @@ lovelace:
       filename: dashboards/rooms.yaml
       title: Rooms
       icon: mdi:devices
+      show_in_sidebar: true
+    dashboard-network:
+      mode: yaml
+      filename: dashboards/network.yaml
+      title: Network
+      icon: mdi:lan
       show_in_sidebar: true
 
 automation: !include automations.yaml

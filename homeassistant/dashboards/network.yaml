@@ -1,0 +1,177 @@
+title: Network
+views:
+  - title: Overview
+    path: overview
+    icon: mdi:lan
+    cards:
+      - type: entities
+        title: Connection health
+        show_header_toggle: false
+        entities:
+          - entity: binary_sensor.network_gateway_reachable
+            name: Gateway
+          - entity: binary_sensor.network_internet_reachable
+            name: Internet probe (1.1.1.1)
+          - entity: binary_sensor.network_dns_resolution
+            name: DNS lookup (example.com)
+          - type: attribute
+            entity: sensor.network_probe
+            attribute: checked_at
+            name: Last gateway and internet check
+            icon: mdi:clock-outline
+            time_format: relative
+          - type: button
+            name: Connection check
+            action_name: Run now
+            icon: mdi:lan-check
+            tap_action:
+              action: perform-action
+              perform_action: homeassistant.update_entity
+              target:
+                entity_id:
+                  - sensor.network_probe
+                  - binary_sensor.network_dns_resolution
+      - type: entities
+        title: Gateway and Wi-Fi
+        show_header_toggle: false
+        entities:
+          - type: attribute
+            entity: sensor.network_probe
+            attribute: gateway_address
+            name: Gateway IP address
+            icon: mdi:ip-network
+          - entity: sensor.network_wifi_signal
+            name: Raspberry Pi Wi-Fi signal
+          - entity: sensor.network_gateway_latency
+            name: Gateway latency
+          - entity: sensor.network_gateway_packet_loss
+            name: Gateway packet loss
+      - type: markdown
+        title: Routers
+        content: |
+          {% set gateway = state_attr('sensor.network_probe', 'gateway_address') %}
+          {% set details = state_attr('sensor.network_probe', 'gateway_router') %}
+          {% if gateway %}
+          [Open router settings](https://{{ gateway }}/) · Local network
+          {% endif %}
+
+          {% if details %}
+          **Default gateway**
+
+          {% if details.get('model') %}
+          - Model: {{ details.model | e }}{% if details.get('hardware') %} ({{ details.hardware | e }}){% endif %}
+          {% elif details.get('hardware') %}
+          - Hardware: {{ details.hardware | e }}
+          {% endif %}
+          {% if details.get('firmware') %}
+          - Firmware: {{ details.firmware | e }}
+          {% endif %}
+          {% if details.get('country') %}
+          - Region: {{ details.country | e }}
+          {% endif %}
+
+          {% endif %}
+          {% set devices = integration_entities('xiaomi_home') | map('device_id') | reject('none') | unique | list %}
+          {% for device in devices if '.router.' in (device_attr(device, 'model') or '') %}
+          {% set name = device_name(device) or 'Router' %}
+          **[{{ name }}](/config/devices/device/{{ device }})**
+
+          {% for metric in expand(device_entities(device)) if metric.domain == 'sensor' and has_value(metric.entity_id) %}
+          {% set label = metric.name | replace(name ~ ' ', '', 1) | trim %}
+          - {{ label | replace('Router Connected Device Number', 'Connected devices') }}: {{ states(metric.entity_id, with_unit=true) }}
+          {% else %}
+          No router readings available.
+          {% endfor %}
+
+          {% endfor %}
+        show_empty: false
+      - type: entities
+        title: Internet
+        show_header_toggle: false
+        entities:
+          - entity: sensor.network_internet_latency
+            name: Internet latency
+          - entity: sensor.network_internet_packet_loss
+            name: Internet packet loss
+      - type: history-graph
+        title: Reachability
+        hours_to_show: 24
+        entities:
+          - entity: binary_sensor.network_gateway_reachable
+            name: Gateway
+          - entity: binary_sensor.network_internet_reachable
+            name: Internet probe
+          - entity: binary_sensor.network_dns_resolution
+            name: DNS lookup
+  - title: Clients
+    path: clients
+    icon: mdi:devices
+    type: panel
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: entities
+            show_header_toggle: false
+            entities:
+              - type: button
+                entity: button.living_room_network_info_scan_now
+                name: Update client list
+                action_name: Scan now
+                icon: mdi:lan-connect
+                tap_action:
+                  action: perform-action
+                  perform_action: button.press
+                  target:
+                    entity_id: button.living_room_network_info_scan_now
+          - type: markdown
+            title: Connected clients
+            content: |
+              {% set sensors = integration_entities('network_info') | select('match', '^sensor\\.') | list %}
+              {% for sensor in sensors if state_attr(sensor, 'devices') is not none %}
+              {% set clients = state_attr(sensor, 'devices') | selectattr('online') | rejectattr('connection', 'in', ['Router', 'Access point']) | list %}
+              {% set with_signal = clients | selectattr('signal', 'number') | sort(attribute='signal') %}
+              {% set without_signal = clients | rejectattr('signal', 'number') | list %}
+              {% set last_scan = as_datetime(state_attr(sensor, 'last_scan'), none) %}
+              **{{ clients | count }} online**{% if last_scan %} · Last scanned {{ relative_time(last_scan) }} ago{% endif %}
+
+              {% if state_attr(sensor, 'router_available') == false %}
+              Router details are temporarily unavailable.
+
+              {% endif %}
+              {% if clients %}
+              | Device | IP address | Connection | Signal |
+              | --- | --- | --- | ---: |
+              {% for client in with_signal + without_signal -%}
+              {% set name = client.get('name') or client.get('hostname') or 'Unnamed device' -%}
+              | {{ name | e | replace('|', '\\|') | replace('\n', ' ') }} | {{ client.get('ip') or '—' }} | {{ client.get('connection') or 'Unknown' }} | {% if client.get('signal') is number %}{{ client.signal }} dBm{% else %}—{% endif %} |
+              {% endfor %}
+              {% endif %}
+
+              {% else %}
+              Network Info has not returned a client list yet.
+              {% endfor %}
+  - title: History
+    path: history
+    icon: mdi:chart-line
+    cards:
+      - type: history-graph
+        title: Latency (last 24 hours)
+        hours_to_show: 24
+        entities:
+          - entity: sensor.network_gateway_latency
+            name: Gateway
+          - entity: sensor.network_internet_latency
+            name: Internet
+      - type: history-graph
+        title: Packet loss (last 24 hours)
+        hours_to_show: 24
+        entities:
+          - entity: sensor.network_gateway_packet_loss
+            name: Gateway
+          - entity: sensor.network_internet_packet_loss
+            name: Internet
+      - type: history-graph
+        title: Raspberry Pi Wi-Fi signal (last 24 hours)
+        hours_to_show: 24
+        entities:
+          - sensor.network_wifi_signal
