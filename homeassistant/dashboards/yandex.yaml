@@ -1,0 +1,42 @@
+title: Yandex
+views:
+  - title: Devices
+    path: devices
+    icon: mdi:devices
+    cards:
+      - type: entities
+        title: Entrance
+        show_header_toggle: false
+        entities:
+          - entity: light.vkhod_lampochka
+            name: Entrance light
+          - entity: sensor.vkhod_datchik_dvizheniia_pri_vkhode_dvizhenie
+            name: Entrance motion
+          - entity: automation.entrance_motion_light
+            name: Motion automation
+      - type: entities
+        title: Other controls
+        show_header_toggle: false
+        entities:
+          - entity: light.koridortretiietazh_nochnik
+            name: Third-floor night light
+          - entity: switch.kladovka_rozetka
+            name: Storage outlet
+      - type: markdown
+        title: Devices by room
+        content: |
+          {% set device_ids = integration_entities('yandex_station')
+             | map('device_id') | reject('none') | unique | list %}
+          {% set inventory = namespace(devices=[]) %}
+          {%- for device in device_ids %}
+            {%- set name = device_attr(device, 'name_by_user') or device_attr(device, 'name') or 'Yandex device' %}
+            {%- set inventory.devices = inventory.devices + [dict(id=device, name=name, room=area_name(device) or 'Unassigned')] %}
+          {%- endfor %}
+          {% for room, devices in inventory.devices | sort(attribute='name') | groupby('room') %}
+          ### {{ room }}
+          {% for device in devices -%}
+          - [{{ device.name }}](/config/devices/device/{{ device.id }})
+          {% endfor %}
+          {% else %}
+          Connect Yandex.Station in [Devices & services](/config/integrations).
+          {% endfor %}

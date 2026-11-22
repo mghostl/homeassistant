@@ -52,6 +52,52 @@ This integration is managed through the UI, rather than `configuration.yaml`.
 `scripts/deploy-ha-config.sh` does not enable it or copy its `.storage` state.
 Keep client credentials and tokens out of this repository.
 
+## Yandex devices
+
+Use the [Yandex.Station community integration](https://github.com/AlexxIT/YandexStation)
+to bring devices from **Home with Alice** (Дом с Алисой) into Home Assistant.
+Supported speakers can use the local network. Other imported smart-home devices
+use Yandex's cloud.
+
+1. As a Home Assistant administrator, open **Settings > Marketplace** and
+   install **Yandex.Station** by **AlexxIT**. If Home Assistant requests a
+   restart, follow the prompt in **Settings > System > Repairs**.
+2. Open the integration setup from Marketplace or go to **Settings > Devices
+   & services > Add integration > Yandex.Station**. Choose **QR code**, scan it
+   with the Yandex app signed into the account that owns the devices, and
+   finish setup in Home Assistant.
+3. In the **Yandex.Station** integration, open **Configure**. Under
+   **Импортировать устройства УДЯ**, select the devices to import and save.
+   Compare the list with **Settings > Devices & services > Devices** first
+   and skip devices already connected through another integration. Check the
+   entity states on the Yandex.Station integration page after saving.
+
+Home Assistant stores the account link and selected devices on the running
+instance. Marketplace manages the component in `custom_components`. Keep the
+account token and `.storage` files out of Git.
+
+The existing Recorder allowlist covers imported `sensor` and `binary_sensor`
+entities. Verify those readings in **History** after they update. If a specific
+switch, light, or speaker needs history, add its entity ID to `recorder.include`
+and verify the result in **History**. Review **Settings > Voice assistants >
+Expose** after import. Some new entities can be exposed automatically, including
+switches and lights that Assist/MCP can control.
+
+Open **Yandex** in the sidebar for the entrance controls and device pages grouped
+by room. The device list follows the Yandex.Station integration as devices are
+added or removed.
+
+`packages/yandex.yaml` turns on the entrance light when the Yandex motion sensor
+changes from `not_detected` to `detected`. Each new detection restarts the
+two-minute countdown. Reconnecting with an old detection does not turn on the
+light. Recorder tracks the motion sensor and the entrance light so both states
+can be checked in **History**.
+
+Every five minutes, the package also asks Yandex.Station to refresh unavailable
+Aqara sensors and thermostats. It sends one status request per affected device.
+Check the automation's **Traces** and the entity's **History** to see whether
+Yandex returned a fresh state.
+
 ## Raspberry Pi monitoring
 
 `raspberry-pi-sensors.yaml` defines seven read-only

@@ -23,6 +23,8 @@ recorder:
     domains:
       - sensor
       - binary_sensor
+    entities:
+      - light.vkhod_lampochka
   exclude:
     domains:
       - device_tracker
@@ -77,6 +79,12 @@ lovelace:
       filename: dashboards/vacuum.yaml
       title: Vacuum
       icon: mdi:robot-vacuum
+      show_in_sidebar: true
+    dashboard-yandex:
+      mode: yaml
+      filename: dashboards/yandex.yaml
+      title: Yandex
+      icon: mdi:devices
       show_in_sidebar: true
 
 automation: !include automations.yaml

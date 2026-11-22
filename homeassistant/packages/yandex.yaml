@@ -1,0 +1,49 @@
+automation:
+  - id: yandex_entrance_motion_light
+    alias: Entrance motion light
+    description: Turn off the entrance light two minutes after the latest detected motion.
+    mode: restart
+    triggers:
+      - trigger: state
+        entity_id: sensor.vkhod_datchik_dvizheniia_pri_vkhode_dvizhenie
+        from: not_detected
+        to: detected
+    actions:
+      - action: light.turn_on
+        target:
+          entity_id: light.vkhod_lampochka
+      - delay: "00:02:00"
+      - action: light.turn_off
+        target:
+          entity_id: light.vkhod_lampochka
+
+  - id: yandex_refresh_unavailable_aqara_devices
+    alias: Refresh unavailable Aqara devices through Yandex
+    description: Request fresh data for unavailable Aqara sensors and thermostats.
+    mode: single
+    triggers:
+      - trigger: time_pattern
+        minutes: "/5"
+    variables:
+      refresh_targets: >-
+        {% set refresh = namespace(devices=[], entities=[]) %}
+        {% for entity in integration_entities('yandex_station') | sort %}
+          {% set device = device_id(entity) %}
+          {% if device and device not in refresh.devices
+                and device_attr(device, 'manufacturer') == 'Aqara'
+                and entity.split('.')[0] in ['sensor', 'binary_sensor', 'climate']
+                and is_state(entity, 'unavailable') %}
+            {% set refresh.devices = refresh.devices + [device] %}
+            {% set refresh.entities = refresh.entities + [entity] %}
+          {% endif %}
+        {% endfor %}
+        {{ refresh.entities }}
+    actions:
+      - repeat:
+          for_each: "{{ refresh_targets }}"
+          sequence:
+            - action: homeassistant.update_entity
+              continue_on_error: true
+              target:
+                entity_id: "{{ repeat.item }}"
+            - delay: "00:00:01"
