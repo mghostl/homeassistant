@@ -82,8 +82,8 @@ lovelace:
       show_in_sidebar: true
     dashboard-yandex:
       mode: yaml
-      filename: dashboards/yandex.yaml
-      title: Yandex
+      filename: dashboards/rooms.yaml
+      title: Rooms
       icon: mdi:devices
       show_in_sidebar: true
 

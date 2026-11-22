@@ -83,10 +83,6 @@ and verify the result in **History**. Review **Settings > Voice assistants >
 Expose** after import. Some new entities can be exposed automatically, including
 switches and lights that Assist/MCP can control.
 
-Open **Yandex** in the sidebar for the entrance controls and device pages grouped
-by room. The device list follows the Yandex.Station integration as devices are
-added or removed.
-
 `packages/yandex.yaml` turns on the entrance light when the Yandex motion sensor
 changes from `not_detected` to `detected`. Each new detection restarts the
 two-minute countdown. Reconnecting with an old detection does not turn on the
@@ -97,6 +93,15 @@ Every five minutes, the package also asks Yandex.Station to refresh unavailable
 Aqara sensors and thermostats. It sends one status request per affected device.
 Check the automation's **Traces** and the entity's **History** to see whether
 Yandex returned a fresh state.
+
+## Rooms dashboard
+
+Open **Rooms** in the sidebar for entrance, living-room, and upstairs controls.
+**Devices by room** lists household device pages from Home Assistant's area
+assignments regardless of which integration supplied them. The dashboard groups
+matching English and Russian room names for display. Assign new devices to a
+room in **Settings > Areas, labels & zones** to include them in the directory.
+The living-room Apple TV is included while its device has no area assignment.
 
 ## Raspberry Pi monitoring
 

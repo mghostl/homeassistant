@@ -1,0 +1,68 @@
+title: Rooms
+views:
+  - title: Overview
+    path: devices
+    icon: mdi:devices
+    cards:
+      - type: entities
+        title: Entrance
+        show_header_toggle: false
+        entities:
+          - entity: light.vkhod_lampochka
+            name: Entrance light
+          - entity: sensor.vkhod_datchik_dvizheniia_pri_vkhode_dvizhenie
+            name: Entrance motion
+          - entity: sensor.entrance_datchik_dveri_pri_vkhode_dver_okno
+            name: Entrance door
+          - entity: automation.entrance_motion_light
+            name: Motion automation
+      - type: entities
+        title: Living room
+        show_header_toggle: false
+        entities:
+          - entity: light.yeelink_de_315120154_strip2_s_2_light
+            name: Light strip
+          - entity: media_player.samsung_qn90ba_55
+            name: Samsung TV
+          - entity: media_player.living_room
+            name: Apple TV
+          - entity: media_player.living_room_echo_dot_max_lev
+            name: Echo
+      - type: entities
+        title: Upstairs and storage
+        show_header_toggle: false
+        entities:
+          - entity: light.koridortretiietazh_nochnik
+            name: Third-floor night light
+          - entity: light.lumi_de_409127391_acn01_s_2_light
+            name: Third-floor hub light
+          - entity: switch.kladovka_rozetka
+            name: Storage outlet
+      - type: markdown
+        title: Devices by room
+        content: |
+          {% set room_names = {
+              'Ванная': 'Bathroom', 'Вход': 'Entrance', 'entrance': 'Entrance',
+              'Гостиная': 'Living room', 'Спальня': 'Bedroom',
+              'Кладовка': 'Storage', 'Storage Left': 'Storage left',
+              'GuestRoom': 'Guest room', 'КоридорПервыйЭтаж': 'First-floor hall',
+              'коридорвторойэтаж': 'Second-floor hall', 'КоридорТретийЭтаж': 'Third-floor hall'
+          } %}
+          {% set device_ids = areas() | map('area_devices') | sum(start=[]) %}
+          {% set apple_tv = device_id('media_player.living_room') %}
+          {% set inventory = namespace(devices=[]) %}
+          {%- for device in (device_ids + [apple_tv]) | reject('none') | unique %}
+            {%- if not device_attr(device, 'entry_type') and '.router.' not in (device_attr(device, 'model') or '') %}
+              {%- set room = area_name(device) or ('Living room' if device == apple_tv else 'Unassigned') %}
+              {%- set name = 'Apple TV' if device == apple_tv else device_name(device) or 'Unnamed device' %}
+              {%- set inventory.devices = inventory.devices + [dict(id=device, name=name, room=room_names.get(room, room))] %}
+            {%- endif %}
+          {%- endfor %}
+          {% for room, devices in inventory.devices | sort(attribute='name') | groupby('room') %}
+          ### {{ room }}
+          {% for device in devices -%}
+          - [{{ device.name }}](/config/devices/device/{{ device.id }})
+          {% endfor %}
+          {% else %}
+          Assign devices to rooms in [Areas, labels & zones](/config/areas).
+          {% endfor %}
