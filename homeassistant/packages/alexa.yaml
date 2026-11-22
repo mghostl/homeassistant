@@ -1,0 +1,52 @@
+automation:
+  - id: alexa_home_alerts
+    alias: Alexa alerts for Roborock and Raspberry Pi
+    description: Speak new problems on the living-room Echo when Lev is home.
+    triggers:
+      - id: vacuum_alert
+        trigger: persistent_notification
+        notification_id: daily_vacuum_not_run
+        update_type: added
+      - id: vacuum_alert
+        trigger: persistent_notification
+        notification_id: daily_vacuum_run_problem
+        update_type: added
+      - id: raspberry_pi_alert
+        trigger: state
+        entity_id:
+          - binary_sensor.raspberry_pi_high_temperature
+          - binary_sensor.raspberry_pi_storage_warning
+          - binary_sensor.raspberry_pi_storage_critical
+          - binary_sensor.raspberry_pi_low_available_memory
+          - binary_sensor.raspberry_pi_sustained_cpu_load
+          - binary_sensor.raspberry_pi_monitoring_stopped
+        from: 'off'
+        to: 'on'
+    conditions:
+      - condition: state
+        entity_id: person.lev
+        state: home
+      - condition: time
+        after: '09:00:00'
+        before: '22:00:00'
+      - condition: state
+        entity_id: switch.living_room_echo_dot_max_lev_do_not_disturb
+        state: 'off'
+      - alias: Skip the storage warning when storage is already critical
+        condition: template
+        value_template: >-
+          {{ trigger.id != 'raspberry_pi_alert' or
+             trigger.entity_id != 'binary_sensor.raspberry_pi_storage_warning' or
+             not is_state('binary_sensor.raspberry_pi_storage_critical', 'on') }}
+    actions:
+      - action: notify.send_message
+        target:
+          entity_id: notify.living_room_echo_dot_max_lev_speak
+        data:
+          message: >-
+            {% if trigger.id == 'vacuum_alert' %}
+              {{ trigger.notification.title }}. Check the Roborock and its dock.
+            {% else %}
+              {{ trigger.to_state.attributes.alert_title }}. Check the Raspberry Pi dashboard.
+            {% endif %}
+    mode: queued

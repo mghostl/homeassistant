@@ -70,6 +70,30 @@ The [Raspberry Pi dashboard](homeassistant/README.md#raspberry-pi-monitoring)
 shows CPU usage and temperature, memory, storage, system load, and boot time.
 Its sensors and dashboard are managed in this repository.
 
+## Local Alexa voice control
+
+[Home Assistant Matter Hub](https://riddix.github.io/home-assistant-matter-hub/)
+runs alongside Home Assistant in Docker. Pair the resulting Matter device in
+the Alexa app while the Echo and Raspberry Pi are on the same LAN.
+
+1. Copy `scripts/install-matter-hub.sh` to the Pi and run it as the SSH user
+   with Docker access.
+2. Create a long-lived token under **Profile > Security**. A dedicated non-admin
+   Home Assistant user supports basic device control. On the Pi, run
+   `bash install-matter-hub.sh --set-token` and paste the token at the hidden
+   prompt. The Pi stores the token in a private settings file outside this
+   repository.
+3. Use an SSH local port forward to access the Matter Hub web interface on port
+   `8482`. In Matter Hub, create an exact entity filter and use a dedicated
+   **Server Mode** device for `vacuum.roborock_qrevo_master`. Pair it in Alexa
+   with the code shown by Matter Hub.
+4. For TV power, create a separate bridge for the Samsung media player and map
+   that entity to **On/Off Plug-In Unit**. Pair it with its own code.
+
+Matter Hub uses existing Home Assistant entities, so pairing does not add
+recorder entries or grant MCP access. Alexa visibility is configured in Matter
+Hub, and Assist/MCP visibility is configured in Home Assistant.
+
 ## Maintenance
 
 `bootstrap.sh` installs normal Raspberry Pi OS updates but skips `rpi-update` by

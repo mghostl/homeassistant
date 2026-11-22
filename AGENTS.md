@@ -65,6 +65,24 @@ deploy YAML, modify Home Assistant configuration, or make broad state changes.
 For any new integration, confirm its intended MCP exposure and whether its
 entities are safe for read-only inspection or device control.
 
+## Alexa and Matter
+
+`homeassistant/packages/alexa.yaml` sends Roborock and Raspberry Pi alerts to
+the Echo through the Alexa Devices integration. Use the existing notification
+IDs and resource thresholds when extending those alerts.
+
+Route Alexa voice commands to Home Assistant through the local Matter Hub
+Docker container. Use `scripts/install-matter-hub.sh` and the setup steps in `README.md`.
+Keep the Matter Hub management interface behind the SSH port forward and use
+exact Home Assistant entity IDs when configuring device filters. The Roborock
+uses a dedicated Server Mode device. The Samsung TV uses a separate bridge
+with an On/Off Plug-In Unit mapping for power control.
+
+Matter pairing and Assist/MCP exposure are configured independently. Verify
+the Matter device type, controller pairing, and a voice command before
+reporting that Alexa control works. Keep access tokens, pairing codes, and
+Matter fabric data out of Git.
+
 ## Commit & Pull Request Guidelines
 
 Recent commits use short imperative messages such as `Init HA` and `update HA configuration`; follow that style and keep each commit focused. Pull requests should describe the target hardware or OS version, list scripts changed, summarize manual validation, and mention any reboot, networking, Docker, or Home Assistant Supervisor impact. Include screenshots only when the visible Home Assistant result changes.
